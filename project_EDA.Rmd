@@ -63,6 +63,16 @@ summary(teams89_drop)
 ```
 
 ```{r}
+#distributions of variables
+par(mfrow =c(4, 4))
+columns = colnames(teams78_drop)
+for(column in columns){
+  hist(teams78_drop[,column], main=column, xlab=column, breaks=30)
+}
+
+```
+
+```{r}
 #linear model with main effects of all included predictors
 lm1 = lm(W.L. ~., data=teams78_drop)
 lm1rmse_train = RMSE(teams78_drop$W.L, predict(lm1, teams78_drop))
