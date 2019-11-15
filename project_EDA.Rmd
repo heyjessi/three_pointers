@@ -9,7 +9,6 @@ output: pdf_document
 \newcommand{\Var}{\text{Var}}    
 \newcommand{\Cov}{\text{Cov}}    
 
-
 ## A Brief Description of the Dataset
 \noindent Our dataset was exported from the [Sports Reference College Basketball](https://www.sports-reference.com/) website. [Sports Reference College Basketball](https://www.sports-reference.com/) states that their contemporary data is "is provided by data companies on an ongoing basis." Assuming that this data is reliable, we extracted basic and advanced team statistics for the 330 NCAA Division 1 teams in the 2007-2008, 2009-2010 and 2017-2018 college basketball seasons. We will team statistics from the 2007-2008 (and possibly the 2008-2009) basketball seasons as our training set with the 2008-2009 W-L% as our response variable. This training set will be split into training and validation datasets to be used for model selection. The 2017-2018 dataset (and possibly 2019-2020) will be used as our test set. The accuracy of our model on this dataset will be unknown until the completion of the 2019-2020 season.
 
@@ -35,7 +34,6 @@ RMSE = function(y,yhat){
 }
 ```
 
-
 ```{r}
 names(teams78)[1] = "Rk"
 names(teams89)[1] = "Rk"
@@ -58,6 +56,7 @@ for(i in 1:ncol(teams89_drop)){
 ```
 
 ```{r}
+# Model 1: All Predictors
 lm1 = lm(W.L. ~., data=teams78_drop)
 lm1rmse_train = RMSE(teams78_drop$W.L, predict(lm1, teams78_drop))
 lm1rmse_test = RMSE(teams89_drop$W.L, predict(lm1, teams89_drop))
@@ -65,6 +64,8 @@ cat('lm1 train RMSE: ', lm1rmse_train, '\n', 'lm1 test RMSE:  ', lm1rmse_test, s
 ```
 
 ```{r}
+# Model 2: Backward Step
+
 lm2 = step(lm1, direction = "backward", k=2, trace = 0)
 lm2rmse_train = RMSE(teams78_drop$W.L, predict(lm2, teams78_drop))
 lm2rmse_test = RMSE(teams89_drop$W.L, predict(lm2, teams89_drop))
@@ -72,6 +73,8 @@ cat('lm2 train RMSE: ', lm2rmse_train, '\n', 'lm2 test RMSE:  ', lm2rmse_test, s
 ```
 
 ```{r}
+# Model 3: Forward Step
+
 lm3 = step(lm1, scope = list(upper = formula(lm1)), direction = "forward", trace=0)
 lm3rmse_train = RMSE(teams78_drop$W.L, predict(lm3, teams78_drop))
 lm3rmse_test = RMSE(teams89_drop$W.L, predict(lm3, teams89_drop))
@@ -79,6 +82,8 @@ cat('lm3 train RMSE: ', lm3rmse_train, '\n', 'lm3 test RMSE:  ', lm3rmse_test, s
 ```
 
 ```{r}
+# Model 4: Ridge
+
 set.seed(2)
 X_train = model.matrix(formula(lm1), data=teams78_drop)[,-1]
 X_test = model.matrix(formula(lm1), data=teams89_drop)[,-1]
@@ -91,6 +96,8 @@ cat('ridge train RMSE: ', ridgermse_train, '\n', 'ridge test RMSE:  ', ridgermse
 ```
 
 ```{r}
+# Model 5: LASSO
+
 lassos = cv.glmnet(X_train, teams78_drop$W.L, alpha=0, lambda=10^seq(-4,4,0.1), nfolds=5)
 best_lambda = lassos$lambda.min
 lasso1 = glmnet(X_train, teams78_drop$W.L, alpha=1, lambda=best_lambda)
@@ -100,6 +107,8 @@ cat('lasso train RMSE: ', lassormse_train, '\n', 'lasso test RMSE:  ', lassormse
 ```
 
 ```{r}
+# Model 6: Tree 1 All Predictors
+
 tree1 = rpart(W.L. ~ . , data=teams78_drop, control=list(minsplit=1,cp=0.00001,maxdepth=20))
 tree1RMSE_train = RMSE(teams78_drop$W.L, predict(tree1, teams78_drop))
 tree1RMSE_test = RMSE(teams89_drop$W.L., predict(tree1, teams89_drop))
@@ -107,6 +116,8 @@ cat('tree1 train RMSE: ', tree1RMSE_train, '\n', 'tree1 test RMSE:  ', tree1RMSE
 ```
 
 ```{r}
+# Model 6: CPS Tree
+
 cps = 10^(seq(-10, 2,.1))
 rmses = rep(NA,length(cps))
 for(i in 1:length(cps)){
@@ -120,6 +131,23 @@ tree2RMSE_train = RMSE(teams78_drop$W.L, predict(tree2, teams78_drop))
 tree2RMSE_test = RMSE(teams89_drop$W.L., predict(tree2, teams89_drop))
 cat('tree2 train RMSE: ', tree2RMSE_train, '\n', 'tree2 test RMSE:  ', tree2RMSE_test, sep='')
 ```
+
+```{r}
+rmse_tab <- matrix(c(lm1rmse_test, lm1rmse_test, lm2rmse_train, lm2rmse_test, lm3rmse_train, lm3rmse_test, lassormse_train, lassormse_test, ridgermse_train, ridgermse_test, tree1rmse_train, tree1rmse_train, tree2rmse_train, tree2rmse_train),ncol=2,byrow=TRUE)
+colnames(rmse_tab) <- c("Train","Test")
+rownames(rmse_tab) <- c("lm1","lm2","lm3","ridge","lasso","tree1", "tree2")
+names(dimnames(rmse_tab)) <- c("model", "data")
+rmse_tab <- as.table(rmse_tab)
+rmse_tab
+```
+
+Currently our best model is the lm3 model or the forward stepping model with an RMSE of 11.57287 on the testing/validation data. The second best model is the ridge model with an RMSE of 11.58128 on the testing/validation data.
+
+Next Steps: If we wanted to predict the winning percentage for teams using our model on the 2019-2020 season, which is currently going on, we would fit our forward stepping model ```lm3``` on the our training data from the 2007-2008 year, validate on the next year 2008-2009 and test on the 2017-2018 dataset (and possibly 2019-2020).
+
+Other next steps for us include a better way to input values for NA and renaming columns or creating an easy glossary for the user to refer to. We want to try random forests and look at the top predictors to fit linear models on our data. Finally, we will also need to consider models outside of this class to fit our data on -- such as the kNN.
+
+Any and all feedback would be appreciated for our initial/baseline model and EDA. Thank you so much for reading through this!
 
 \vspace{0.1in}
 
