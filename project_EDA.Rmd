@@ -56,20 +56,25 @@ for(i in 1:ncol(teams89_drop)){
 }
 ```
 
-```{r}
+```{r eval=FALSE}
 #explore data 
 summary(teams78_drop)
 summary(teams89_drop)
 ```
 
 ```{r}
-#distributions of variables
 par(mfrow =c(4, 4))
-columns = colnames(teams78_drop)
+par(mar=c(1,2,3,3))
+columns = colnames(teams78_drop)[c(1:16)]
 for(column in columns){
   hist(teams78_drop[,column], main=column, xlab=column, breaks=30)
 }
 
+par(mfrow =c(4, 4))
+columns = colnames(teams78_drop)[c(17:31)]
+for(column in columns){
+  hist(teams78_drop[,column], main=column, xlab=column, breaks=30)
+}
 ```
 
 ```{r}
