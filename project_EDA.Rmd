@@ -55,8 +55,30 @@ for(i in 1:ncol(teams89_drop)){
 }
 ```
 
+```{r eval=FALSE}
+#explore data 
+summary(teams78_drop)
+summary(teams89_drop)
+```
+
 ```{r}
-# Model 1: All Predictors
+par(mfrow =c(4, 4))
+par(mar=c(1,2,3,3))
+columns = colnames(teams78_drop)[c(1:16)]
+for(column in columns){
+  hist(teams78_drop[,column], main=column, xlab=column, breaks=30)
+}
+
+par(mfrow =c(4, 4))
+columns = colnames(teams78_drop)[c(17:31)]
+for(column in columns){
+  hist(teams78_drop[,column], main=column, xlab=column, breaks=30)
+}
+```
+
+```{r}
+# Model 1: Linear Model with Main Effects of All Predictors
+
 lm1 = lm(W.L. ~., data=teams78_drop)
 lm1rmse_train = RMSE(teams78_drop$W.L, predict(lm1, teams78_drop))
 lm1rmse_test = RMSE(teams89_drop$W.L, predict(lm1, teams89_drop))
@@ -64,7 +86,7 @@ cat('lm1 train RMSE: ', lm1rmse_train, '\n', 'lm1 test RMSE:  ', lm1rmse_test, s
 ```
 
 ```{r}
-# Model 2: Backward Step
+# Model 2: Backward Sequential Variable Selection
 
 lm2 = step(lm1, direction = "backward", k=2, trace = 0)
 lm2rmse_train = RMSE(teams78_drop$W.L, predict(lm2, teams78_drop))
@@ -73,7 +95,7 @@ cat('lm2 train RMSE: ', lm2rmse_train, '\n', 'lm2 test RMSE:  ', lm2rmse_test, s
 ```
 
 ```{r}
-# Model 3: Forward Step
+# Model 3: Forward Sequential Variable Selection Regression
 
 lm3 = step(lm1, scope = list(upper = formula(lm1)), direction = "forward", trace=0)
 lm3rmse_train = RMSE(teams78_drop$W.L, predict(lm3, teams78_drop))
@@ -82,7 +104,7 @@ cat('lm3 train RMSE: ', lm3rmse_train, '\n', 'lm3 test RMSE:  ', lm3rmse_test, s
 ```
 
 ```{r}
-# Model 4: Ridge
+# Model 4: Well Tuned Ridge 
 
 set.seed(2)
 X_train = model.matrix(formula(lm1), data=teams78_drop)[,-1]
@@ -96,7 +118,7 @@ cat('ridge train RMSE: ', ridgermse_train, '\n', 'ridge test RMSE:  ', ridgermse
 ```
 
 ```{r}
-# Model 5: LASSO
+# Model 5: Well Tuned LASSO
 
 lassos = cv.glmnet(X_train, teams78_drop$W.L, alpha=0, lambda=10^seq(-4,4,0.1), nfolds=5)
 best_lambda = lassos$lambda.min
@@ -116,7 +138,7 @@ cat('tree1 train RMSE: ', tree1RMSE_train, '\n', 'tree1 test RMSE:  ', tree1RMSE
 ```
 
 ```{r}
-# Model 6: CPS Tree
+# Model 6: Tuned Pruned Regression Tree
 
 cps = 10^(seq(-10, 2,.1))
 rmses = rep(NA,length(cps))
