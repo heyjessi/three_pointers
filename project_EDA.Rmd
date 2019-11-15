@@ -163,9 +163,9 @@ rmse_tab <- as.table(rmse_tab)
 rmse_tab
 ```
 
-Currently our best model is the lm3 model or the forward stepping model with an RMSE of 11.57287 on the testing/validation data. The second best model is the ridge model with an RMSE of 11.58128 on the testing/validation data.
+Currently our best model is the lm2 model or the backwards stepping model with an RMSE of 0.05404892 on the testing/validation data. The second best model is the LASSO model with an RMSE of 0.05412679 on the testing/validation data.
 
-Next Steps: If we wanted to predict the winning percentage for teams using our model on the 2019-2020 season, which is currently going on, we would fit our forward stepping model ```lm3``` on the our training data from the 2007-2008 year, validate on the next year 2008-2009 and test on the 2017-2018 dataset (and possibly 2019-2020).
+Next Steps: If we wanted to predict the winning percentage for teams using our model on the 2019-2020 season, which is currently going on, we would fit our forward stepping model ```lm2``` on the our training data from the 2007-2008 year, validate on the next year 2008-2009 and test on the 2017-2018 dataset (and possibly 2019-2020).
 
 Other next steps for us include a better way to input values for NA and renaming columns or creating an easy glossary for the user to refer to. We want to try random forests and look at the top predictors to fit linear models on our data. Finally, we will also need to consider models outside of this class to fit our data on -- such as the kNN.
 
