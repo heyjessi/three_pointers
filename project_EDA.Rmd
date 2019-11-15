@@ -132,9 +132,9 @@ cat('lasso train RMSE: ', lassormse_train, '\n', 'lasso test RMSE:  ', lassormse
 # Model 6: Tree 1 All Predictors
 
 tree1 = rpart(W.L. ~ . , data=teams78_drop, control=list(minsplit=1,cp=0.00001,maxdepth=20))
-tree1RMSE_train = RMSE(teams78_drop$W.L, predict(tree1, teams78_drop))
-tree1RMSE_test = RMSE(teams89_drop$W.L., predict(tree1, teams89_drop))
-cat('tree1 train RMSE: ', tree1RMSE_train, '\n', 'tree1 test RMSE:  ', tree1RMSE_test, sep='')
+tree1rmse_train = RMSE(teams78_drop$W.L, predict(tree1, teams78_drop))
+tree1rmse_test = RMSE(teams89_drop$W.L., predict(tree1, teams89_drop))
+cat('tree1 train RMSE: ', tree1rmse_train, '\n', 'tree1 test RMSE:  ', tree1rmse_test, sep='')
 ```
 
 ```{r}
@@ -149,9 +149,9 @@ for(i in 1:length(cps)){
 }
 
 tree2 = rpart(W.L. ~ ., data=teams78_drop, control=list(minsplit=1,cp=cps[which.min(which.min(rmses))],maxdepth=20))
-tree2RMSE_train = RMSE(teams78_drop$W.L, predict(tree2, teams78_drop))
-tree2RMSE_test = RMSE(teams89_drop$W.L., predict(tree2, teams89_drop))
-cat('tree2 train RMSE: ', tree2RMSE_train, '\n', 'tree2 test RMSE:  ', tree2RMSE_test, sep='')
+tree2rmse_train = RMSE(teams78_drop$W.L, predict(tree2, teams78_drop))
+tree2rmse_test = RMSE(teams89_drop$W.L., predict(tree2, teams89_drop))
+cat('tree2 train RMSE: ', tree2rmse_train, '\n', 'tree2 test RMSE:  ', tree2rmse_test, sep='')
 ```
 
 ```{r}
