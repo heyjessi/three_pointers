@@ -35,7 +35,6 @@ RMSE = function(y,yhat){
 }
 ```
 
-
 ```{r}
 names(teams78)[1] = "Rk"
 names(teams89)[1] = "Rk"
@@ -58,6 +57,13 @@ for(i in 1:ncol(teams89_drop)){
 ```
 
 ```{r}
+#explore data 
+summary(teams78_drop)
+summary(teams89_drop)
+```
+
+```{r}
+#linear model with main effects of all included predictors
 lm1 = lm(W.L. ~., data=teams78_drop)
 lm1rmse_train = RMSE(teams78_drop$W.L, predict(lm1, teams78_drop))
 lm1rmse_test = RMSE(teams89_drop$W.L, predict(lm1, teams89_drop))
@@ -65,6 +71,7 @@ cat('lm1 train RMSE: ', lm1rmse_train, '\n', 'lm1 test RMSE:  ', lm1rmse_test, s
 ```
 
 ```{r}
+#backward sequential variable selection regression model
 lm2 = step(lm1, direction = "backward", k=2, trace = 0)
 lm2rmse_train = RMSE(teams78_drop$W.L, predict(lm2, teams78_drop))
 lm2rmse_test = RMSE(teams89_drop$W.L, predict(lm2, teams89_drop))
@@ -72,6 +79,7 @@ cat('lm2 train RMSE: ', lm2rmse_train, '\n', 'lm2 test RMSE:  ', lm2rmse_test, s
 ```
 
 ```{r}
+#forward sequential variable selection regression model
 lm3 = step(lm1, scope = list(upper = formula(lm1)), direction = "forward", trace=0)
 lm3rmse_train = RMSE(teams78_drop$W.L, predict(lm3, teams78_drop))
 lm3rmse_test = RMSE(teams89_drop$W.L, predict(lm3, teams89_drop))
@@ -79,6 +87,7 @@ cat('lm3 train RMSE: ', lm3rmse_train, '\n', 'lm3 test RMSE:  ', lm3rmse_test, s
 ```
 
 ```{r}
+#well-tuned Ridge regression model
 set.seed(2)
 X_train = model.matrix(formula(lm1), data=teams78_drop)[,-1]
 X_test = model.matrix(formula(lm1), data=teams89_drop)[,-1]
@@ -91,6 +100,7 @@ cat('ridge train RMSE: ', ridgermse_train, '\n', 'ridge test RMSE:  ', ridgermse
 ```
 
 ```{r}
+#well-tuned Lasso regression model
 lassos = cv.glmnet(X_train, teams78_drop$W.L, alpha=0, lambda=10^seq(-4,4,0.1), nfolds=5)
 best_lambda = lassos$lambda.min
 lasso1 = glmnet(X_train, teams78_drop$W.L, alpha=1, lambda=best_lambda)
@@ -100,6 +110,7 @@ cat('lasso train RMSE: ', lassormse_train, '\n', 'lasso test RMSE:  ', lassormse
 ```
 
 ```{r}
+#regresion tree
 tree1 = rpart(W.L. ~ . , data=teams78_drop, control=list(minsplit=1,cp=0.00001,maxdepth=20))
 tree1RMSE_train = RMSE(teams78_drop$W.L, predict(tree1, teams78_drop))
 tree1RMSE_test = RMSE(teams89_drop$W.L., predict(tree1, teams89_drop))
@@ -107,6 +118,7 @@ cat('tree1 train RMSE: ', tree1RMSE_train, '\n', 'tree1 test RMSE:  ', tree1RMSE
 ```
 
 ```{r}
+#tuned pruned regression tree
 cps = 10^(seq(-10, 2,.1))
 rmses = rep(NA,length(cps))
 for(i in 1:length(cps)){
