@@ -35,7 +35,7 @@ dim_checker <- function(df) {
   }
 }
 
-
+# Read in df and Add time
 add_time <- function(df_str){
   df <- read.csv(paste("data/", df_str, sep = ""))
   df <- select (df,-c(X))
