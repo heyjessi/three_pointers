@@ -34,24 +34,27 @@ long.data <- read_data()
 
 # Write long dataframe and read it in 
 # write.csv(long.data, file = "data/full_data.csv")
-full_df <- read.csv("data/full_data.csv")
+full_df_raw <- read.csv("data/full_data.csv")
 
-# Let's remove certain predictors that we know from data collection are bad
-full_df <- select (full_df,-c(Pace, ORtg, STL., ORB., MP))
+# Let's remove certain predictors that we know from data collection are bad...
+full_df <- select (full_df_raw,-c(Pace, ORtg, STL., ORB., MP, X, Rk, 
+                              # ... and some highly Colinear predictors 
+                              ConfW, ConfL, HomeW, HomeL, AwayW, AwayL))
 
 # We've got a problem with the School names
 table(full_df$School)
 
-# Need to unique and combine these 
+# The source of our data adds " NCAA" to teams that made a tournament appearance 
+# We need to combine these names with the school name if they didn't make an appearance
+
+# Let's use some regex magic
 schools <- as.character(full_df$School)
 unique_schools <- names(table(full_df$School)); head(unique_schools)
-
-# Regex Magic 
 schools_clean <- gsub("[[:space:]]+NCAA", "", schools)
 unique_schools_clean <- names(table(schools_clean))
 
 # Replace Schools with Schools clean 
-full_df$School <- schools_clean
+full_df$School <- as.factor(schools_clean)
 
 # look again at a table of schools 
 table(full_df$School)
@@ -71,10 +74,21 @@ df_complete <- full_df[which(!(full_df$School %in% schools_incomplete)), ]
 # We have 322 unique schools with complete data from the 2003-2017 seasons
 length(unique(df_complete$School))
 
-# Write Clean Df
+# Check that values make sense in the summary 
+summary(df_complete)
 
+# We have 5 NA's for ORB, so let's impute the mean for those 
+df_complete$ORB[is.na(df_complete$ORB)] <- round(mean(df_complete$ORB, na.rm = T))
+
+# Check that values make sense in the summary 
+summary(df_complete)
+
+# Write Clean Df
+df.clean <- write.csv(df_complete, file = "data/full_data_clean.csv")
 
 # Read in Clean DF 
 df.clean <- read.csv("data/full_data_clean.csv")
+
+
 
 
