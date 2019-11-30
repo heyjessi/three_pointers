@@ -1,5 +1,5 @@
 # Jess, Anna and Seth Project
-# 11/6/19
+# 11/29/19
 library(tidyverse)
 library(dplyr)
 
@@ -23,5 +23,5 @@ read_data <- function() {
 
 read_data()
 
-names(teams34)
+names(teams0304)
 predictors <- c("")
