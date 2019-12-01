@@ -9,8 +9,9 @@ if (!require('minqa')) install.packages('minqa'); library(minqa)
 if (!require('lme4')) install.packages('lme4'); library(lme4) # for mixed models 
 if (!require('segmented')) install.packages('segmented'); library(segmented)
 # https://cran.r-project.org/web/packages/segmented/segmented.pdf
+if (!require('ggplot2')) install.packages('ggplot2'); library(ggplot2)
 
-# Read in Clean DF 
+# Read in Clean DF
 
 df.clean <- add_time("complete_data_clean.csv")
 df.tourney <- add_time("tourney_data_clean.csv")
@@ -19,6 +20,18 @@ df.tourney <- add_time("tourney_data_clean.csv")
 dim_checker(df.clean)
 dim_checker(df.tourney)
 
+# will write up a section about the variables we look at here, most seem normal, which is good
+summary(df.clean)
+summary(df.tourney)
+
+# gets all the variables correlated with time, the first non game related one to go up
+# is X3PAr! (7 out of 30 variables) our response variable that we are going to measure
+top_cor_list = cor(df.clean.noschool)[,ncol(df.clean.noschool)-1]
+top_cor_list = sort(top_cor_list, decreasing = TRUE)
+top_cor_list = top_cor_list[3:length(top_cor_list)]
+top_cor_list
+list_top = names(top_cor_list)
+list_top
 
 # Let's have X3PAr be our response
 # Check assumption of normal distribution
@@ -171,7 +184,6 @@ summary(seg5)
 
 # Suggests no breakpoints... interesting...
 
-
 ### Test for Breakpoints
 davies.test(lm1, ~time)
 
@@ -221,12 +233,5 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
   theme_hodp()
 p 
 
-
 ### T tests to determine whether or not slopes are significantly different
 # https://influentialpoints.com/Training/simple_linear_regression-principles-properties-assumptions.htm
-
-
-
-
-
-
