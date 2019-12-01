@@ -8,6 +8,7 @@ if (!require('parallel')) install.packages('parallel'); library(parallel)
 if (!require('minqa')) install.packages('minqa'); library(minqa)
 if (!require('lme4')) install.packages('lme4'); library(lme4) # for mixed models 
 if (!require('segmented')) install.packages('segmented'); library(segmented)
+# https://cran.r-project.org/web/packages/segmented/segmented.pdf
 
 # Read in Clean DF 
 
@@ -151,22 +152,81 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
             linetype = "solid", size=1) + 
   scale_colour_identity(name="Model Type", 
                         breaks = c('#EE3838','#78C4D4'),
-                        labels = c("Simple OLS", "Segmented OLS"),
+                        labels = c("Simple OLS", "Segmented OLS break between 9 and 10"),
                         guide = "legend")  +   
   labs(title="3PAr Over Time - Pooled") +
   xlab("Year") +
   ylab("3PAr") +
   theme_hodp()
-p
+p 
 
 # Let's try to find segements using psi = NA 
 # This will iteratively try to find breakpoints though its likely to overestimate 
 # the appropriate number 
 seg5 <- segmented(lm1, 
                   seg.Z = ~ time, 
-                  psi = NA)
+                  psi = c(5,10))
 
 summary(seg5)
 
-
 # Suggests no breakpoints... interesting...
+
+
+### Test for Breakpoints
+davies.test(lm1, ~time)
+
+seg6 <- segmented(lm1, 
+                  seg.Z = ~ time, 
+                  psi = list(time = c(9.3)))
+# Check for existence of one breakpoint using the pscore.test command
+
+davies.test(seg4, ~time)
+
+seg7 <- segmented(lm1, 
+                  seg.Z = ~ time, 
+                  psi = list(time = c(3.1, 9.3)))
+
+davies.test(seg7, ~time)
+
+# 2 Breakpoints
+### between the 2006-2007 and 2007-08 seasons - Rule change was announced in May 2007 
+# https://www.espn.com/mens-college-basketball/news/story?id=2859065
+
+# Then another, more significant breakpoint between 2012-2013 and 2013-2014 seasons 
+# Curry sets record for NBA 3's in 2012-13
+# get breakpoints
+seg7$psi
+# get the slopes
+slope(seg7)
+
+# get the fitted data
+seg7.fitted <- fitted(seg7)
+seg7.fitted.df <- data.frame(year = df.tourney$year, X3PAr = my.fitted)
+
+# plot the fitted model
+ggplot(seg7.fitted.df, aes(x = year, y = X3PAr)) + geom_line()
+
+p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) + 
+  geom_point() +
+  stat_smooth(method = "lm", aes(col = '#EE3838'), se = F,size=1) + 
+  geom_line(data = seg7.fitted.df, aes(x = year, y = X3PAr, color = '#78C4D4'),
+            linetype = "solid", size=1) + 
+  scale_colour_identity(name="Model Type", 
+                        breaks = c('#EE3838','#78C4D4'),
+                        labels = c("Simple OLS", "Segmented OLS: 2 breaks"),
+                        guide = "legend")  +   
+  labs(title="3PAr Over Time - Pooled") +
+  xlab("Year") +
+  ylab("3PAr") +
+  theme_hodp()
+p 
+
+
+### T tests to determine whether or not slopes are significantly different
+# https://influentialpoints.com/Training/simple_linear_regression-principles-properties-assumptions.htm
+
+
+
+
+
+
