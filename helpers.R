@@ -42,3 +42,15 @@ add_time <- function(df_str){
   df$time <- df$year - 2003
   return(df)
 }
+
+get_prop_df <- function(df) {
+  drops_names <- c("year", "time", "W.L.", "SRS", "SOS","FTr","X3PAr","TS.", "TRB.", "AST.",  "BLK.", "eFG.", "TOV.", "FT.FGA", "FG.", "X3P.", "FT.")
+  keep = df[drops_names]
+  drop = df[ , !(names(df) %in% drops_names)]
+  keep$id = 1:nrow(keep)
+  drop$id = 1:nrow(drop)
+  new_drop = drop[, 3:ncol(drop)]/(drop$G)
+  prop_df = cbind(new_drop, keep)
+  return(prop_df)
+}
+

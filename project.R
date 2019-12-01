@@ -37,6 +37,11 @@ list_top
 # we noticed that games also increases overtime (it's one of the top predictors)
 plot(df.clean.noschool$time, df.clean.noschool$G)
 
+# since we know that games are increasing can we make those statistics into proportions to control
+# for the specific effect
+get_newprop = cbind(df.tourney$School, get_prop_df(df.tourney))
+get_newprop
+
 # Let's have X3PAr be our response
 # Check assumption of normal distribution
 p <- ggplot(df.tourney, aes(x=X3PAr)) +
@@ -238,4 +243,5 @@ p
 
 ### T tests to determine whether or not slopes are significantly different
 # https://influentialpoints.com/Training/simple_linear_regression-principles-properties-assumptions.html
+
 
