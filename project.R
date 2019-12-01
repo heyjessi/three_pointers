@@ -26,12 +26,16 @@ summary(df.tourney)
 
 # gets all the variables correlated with time, the first non game related one to go up
 # is X3PAr! (7 out of 30 variables) our response variable that we are going to measure
+df.clean.noschool = df.clean[,2:length(df.clean)]
 top_cor_list = cor(df.clean.noschool)[,ncol(df.clean.noschool)-1]
 top_cor_list = sort(top_cor_list, decreasing = TRUE)
 top_cor_list = top_cor_list[3:length(top_cor_list)]
 top_cor_list
 list_top = names(top_cor_list)
 list_top
+
+# we noticed that games also increases overtime (it's one of the top predictors)
+plot(df.clean.noschool$time, df.clean.noschool$G)
 
 # Let's have X3PAr be our response
 # Check assumption of normal distribution
@@ -99,7 +103,6 @@ coef(summary(lmer3d))
 # Look at differences b/w individual schools coefs
 coef(lmer2)$School
 coef(lmer3d)$School
-
 
 # Unsurprisingly, our random slopes and intercepts model is significantly better than 
 # our simple random intercepts model. It may be even more overfit though. 
@@ -234,4 +237,5 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
 p 
 
 ### T tests to determine whether or not slopes are significantly different
-# https://influentialpoints.com/Training/simple_linear_regression-principles-properties-assumptions.htm
+# https://influentialpoints.com/Training/simple_linear_regression-principles-properties-assumptions.html
+
