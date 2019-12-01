@@ -9,9 +9,8 @@ if (!require('minqa')) install.packages('minqa'); library(minqa)
 if (!require('lme4')) install.packages('lme4'); library(lme4) # for mixed models 
 if (!require('segmented')) install.packages('segmented'); library(segmented)
 # https://cran.r-project.org/web/packages/segmented/segmented.pdf
-if (!require('ggplot2')) install.packages('ggplot2'); library(ggplot2)
 
-# Read in Clean DF
+# Read in Clean DF 
 
 df.clean <- add_time("complete_data_clean.csv")
 df.tourney <- add_time("tourney_data_clean.csv")
@@ -20,22 +19,6 @@ df.tourney <- add_time("tourney_data_clean.csv")
 dim_checker(df.clean)
 dim_checker(df.tourney)
 
-# will write up a section about the variables we look at here, most seem normal, which is good
-summary(df.clean)
-summary(df.tourney)
-
-# gets all the variables correlated with time, the first non game related one to go up
-# is X3PAr! (7 out of 30 variables) our response variable that we are going to measure
-df.clean.noschool = df.clean[,2:length(df.clean)]
-top_cor_list = cor(df.clean.noschool)[,ncol(df.clean.noschool)-1]
-top_cor_list = sort(top_cor_list, decreasing = TRUE)
-top_cor_list = top_cor_list[3:length(top_cor_list)]
-top_cor_list
-list_top = names(top_cor_list)
-list_top
-
-# we noticed that games also increases overtime (it's one of the top predictors)
-plot(df.clean.noschool$time, df.clean.noschool$G)
 
 # Let's have X3PAr be our response
 # Check assumption of normal distribution
@@ -69,7 +52,7 @@ coef(summary(lmer2))
 coef(lmer2)$School
 
 ### Fitting a random slopes, random intercepts model is often failing to converge
-lmer3 <- lmer(X3PAr ~ time + (1|School) + (time|School), data=df.tourney)
+lmer3 <- lmer(X3PAr ~ time + (1|School) + (time|School), data=df.tourney) # fails to converge
 
 # list of convergence failures... 
 lmer3a <- update(lmer3,
@@ -80,7 +63,7 @@ lmer3b <- update(lmer3,
                  control=lmerControl(optCtrl=list(ftol_abs=1e-8,xtol_abs=1e-8)))
 lmer3c <- update(lmer3, control=lmerControl(optimizer="bobyqa"))
 
-# Use all fit to find a  
+# Use all fit to find a model that converges
 # Source: https://joshua-nugent.github.io/allFit/
 ncores <- detectCores()
 diff_optims <- allFit(lmer3, maxfun = 1e6, parallel = 'multicore', ncpus = ncores)
@@ -101,12 +84,13 @@ coef(summary(lmer2))
 coef(summary(lmer3d))
 
 # Look at differences b/w individual schools coefs
-coef(lmer2)$School
-coef(lmer3d)$School
+head(coef(lmer2)$School)
+head(coef(lmer3d)$School)
+
 
 # Unsurprisingly, our random slopes and intercepts model is significantly better than 
 # our simple random intercepts model. It may be even more overfit though. 
-anova(lmer2,lmer3)
+anova(lmer2,lmer3d)
 
 ### Let's do some plots
 # Get coefficients 
@@ -134,9 +118,8 @@ p
 
 ### SEGMENTED REGRESSION ###
 # Using the segmented package
-
 # have to provide estimates for breakpoints.
-# apriori guess of 10 based on Curry 2015 MVP season  
+# apriori guess of 10 based on Curry 2015 MVP season,   
 seg4 <- segmented(lm1, 
                     seg.Z = ~ time, 
                     psi = list(time = c(10)))
@@ -181,13 +164,16 @@ p
 # the appropriate number 
 seg5 <- segmented(lm1, 
                   seg.Z = ~ time, 
-                  psi = c(5,10))
+                  psi = c(3,10))
 
 summary(seg5)
 
-# Suggests no breakpoints... interesting...
+# Suggests 2 breakpoints
 
-### Test for Breakpoints
+
+
+
+### Alternative method to search: Test for Breakpoints
 davies.test(lm1, ~time)
 
 seg6 <- segmented(lm1, 
@@ -236,6 +222,12 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
   theme_hodp()
 p 
 
+
 ### T tests to determine whether or not slopes are significantly different
-# https://influentialpoints.com/Training/simple_linear_regression-principles-properties-assumptions.html
+# https://influentialpoints.com/Training/simple_linear_regression-principles-properties-assumptions.htm
+
+
+
+
+
 
