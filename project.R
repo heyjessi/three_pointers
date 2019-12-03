@@ -4,6 +4,7 @@ setwd("stat139finalproject/") # for jess only
 
 source('styleguide.R')
 source('helpers.R')
+source('cleaner.R')
 # Packages for optimizers
 if (!require('optimx')) install.packages('optimx'); library(optimx)
 if (!require('parallel')) install.packages('parallel'); library(parallel)

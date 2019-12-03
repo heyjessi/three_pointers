@@ -19,9 +19,9 @@ read_data <- function() {
     teams$year <- as.numeric(year)
     df <- rbind(df, teams)
   }
-  
   return(df)
 }
+
 
 # Check Dimensions
 dim_checker <- function(df) {
