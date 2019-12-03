@@ -1,5 +1,7 @@
 # Jess, Anna and Seth Project
 # 11/29/19
+setwd("stat139finalproject/") # for jess only
+
 source('styleguide.R')
 source('helpers.R')
 # Packages for optimizers
@@ -8,6 +10,7 @@ if (!require('parallel')) install.packages('parallel'); library(parallel)
 if (!require('minqa')) install.packages('minqa'); library(minqa)
 if (!require('lme4')) install.packages('lme4'); library(lme4) # for mixed models 
 if (!require('segmented')) install.packages('segmented'); library(segmented)
+if (!require('dplyr')) install.packages('dplyr'); library(dplyr)
 # https://cran.r-project.org/web/packages/segmented/segmented.pdf
 
 # Read in Clean DF 
@@ -56,6 +59,9 @@ summary(lmer2)
 coef(summary(lmer2))
 coef(lmer2)$School
 
+# split into categories -- > see if there are  
+# binary indicator as for if they were a winning team or losing team for most of the seasons
+
 ### Fitting a random slopes, random intercepts model is often failing to converge
 lmer3 <- lmer(X3PAr ~ time + (1  + time|School), data=df.tourney) # fails to converge
 
@@ -63,7 +69,7 @@ lmer3 <- lmer(X3PAr ~ time + (1  + time|School), data=df.tourney) # fails to con
 lmer3a <- update(lmer3,
               REML = FALSE, 
               control = lmerControl(
-                optimizer ='optimx', optCtrl=list(method='L-BFGS-B')))
+                optimzer ='optimx', optCtrl=list(method='L-BFGS-B')))
 lmer3b <- update(lmer3, 
                  control=lmerControl(optCtrl=list(ftol_abs=1e-8,xtol_abs=1e-8)))
 lmer3c <- update(lmer3, control=lmerControl(optimizer="bobyqa"))
@@ -82,13 +88,12 @@ lmer3d <- update(lmer3, control=lmerControl(optimizer="Nelder_Mead"))
 # Summary
 summary(lmer3d)
 
-
 ### COMPARE 
 # Fixed coefs
 coef(summary(lmer2))
 coef(summary(lmer3d))
 
-# Look at differences b/w individual schools coefs
+# Look at differences b/t individual schools coefs
 head(coef(lmer2)$School)
 head(coef(lmer3d)$School)
 
@@ -226,12 +231,9 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
   theme_hodp()
 p 
 
-
 ### T tests to determine whether or not slopes are significantly different (bonferroni needed?)
 # https://influentialpoints.com/Training/simple_linear_regression-principles-properties-assumptions.htm
 slope(seg7)
-
-
 
 # Mixed Model Segmented - coaching change
 lmer8 <- lmer(X3PAr ~ time*same.coach + (1  + time|School) , data=df.tourney) # fails to converge
@@ -287,8 +289,6 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
 p
 
 
-
-
 # Mixed model by era 
 df.tourney$era <- as.factor((df.tourney$year > 2006) + (df.tourney$year > 2012))
 # Mixed Model Segmented - coaching change
@@ -301,10 +301,14 @@ is.OK <- sapply(diff_optims, is, "merMod")
 diff_optims.OK <- diff_optims[is.OK]
 lapply(diff_optims.OK,function(x) x@optinfo$conv$lme4$messages)
 
+### T tests to determine whether or not slopes are significantly different
+# https://influentialpoints.com/Training/simple_linear_regression-principles-properties-assumptions.html
+
 # Nelder_Mead for convergence
 lmer9a <- update(lmer9, control=lmerControl(optimizer="Nelder_Mead"))
 summary(lmer9a)
 
+# draws the mean number of threes point attempts per year across years
 
 ### Compare
 
@@ -356,3 +360,77 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
   ylab("3PAr") +
   theme_hodp()
 p
+
+# jess stuffs
+df.tourney %>%
+  group_by(time) %>%
+  summarise(mean_three = mean(X3PAr)) %>%
+  ggplot(df.tourney, mapping = aes(x = time + 2003, y = mean_three)) +
+  geom_line(stat="identity") + ggtitle("Average 3PAr Across the League") + 
+  xlab("Year") +
+  ylab("3PAr")+
+  theme_hodp()
+
+# jess tests
+
+# gets the minimum slopes, what patterns does this reveal
+
+sorted_alpha_school = df.tourney[order(df.tourney$School),]
+sorted_alpha_school$winner = (sorted_alpha_school$W.L. >= 0.5) * 1
+View(sorted_alpha_school)
+
+total_wins <- aggregate(sorted_alpha_school$winner, by=list(sorted_alpha_school$School), FUN=sum)[2]
+
+idx_min <- which.min(coef(lmer3d)$School[,2])
+school_list <- sort(unique(df.tourney$School)) # alphabetically sort the list
+school_list[idx_min]
+coef(lmer3d)$School[idx_min, 2]
+
+new_df <- data.frame(school = school_list, slope = coef(lmer3d)$School[,2], wins = total_wins)
+new_df = new_df[order(new_df$slope),]
+nrow(new_df)
+most_neg <- new_df[1:75, ]
+middle <- new_df[75:150, ]
+most_pos <- new_df[151:225, ]
+
+ggplot(most_neg, aes(x = x)) +
+  geom_histogram() +
+  geom_vline(aes(xintercept=mean(total_wins$x)),
+             color="red", size=1) +
+  geom_vline(aes(xintercept=mean(most_neg$x)),
+             color="blue",linetype="dashed", size=1) +
+  theme_hodp() +
+  labs(title="Bottom Third Teams For 3PAr Rate") +
+  xlab("Wins in 15 years") +
+  ylab("Frequency")
+
+ggplot(most_pos, aes(x = x)) +
+  geom_histogram() +
+  geom_vline(aes(xintercept=mean(total_wins$x)),
+             color="red", size=1) +
+  geom_vline(aes(xintercept=mean(most_pos$x)),
+             color="blue",linetype="dashed", size=1) +
+  theme_hodp() +
+  labs(title="Top Third Teams For 3PAr Rate") +
+  xlab("Wins in 15 years") +
+  ylab("Frequency")
+
+# check for with absolute value
+abs_df <- new_df
+abs_df$slope = abs(abs_df$slope)
+abs_df = abs_df[order(abs_df$slope),]
+abs_df
+
+close_zero <- abs_df[1:75, ]
+close_zero
+
+ggplot(close_zero, aes(x = x)) +
+  geom_histogram() +
+  geom_vline(aes(xintercept=mean(total_wins$x)),
+             color="red", size=1) +
+  geom_vline(aes(xintercept=mean(close_zero$x)),
+             color="blue",linetype="dashed", size=1) +
+  theme_hodp() +
+  labs(title="Top Third of Teams Closest to 0 3PAr Rate Change") +
+  xlab("Wins in 15 years") +
+  ylab("Frequency")
