@@ -50,14 +50,14 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
   theme_hodp()
 p
 
-# Model 2: Mixed Model, fixed effect of time
+# Model 2: Mixed Model, fixed effect of time, random intercept stratified on School
 lmer2 <- lmer(X3PAr ~ time + (1 | School), data=df.tourney)
 summary(lmer2)
 coef(summary(lmer2))
 coef(lmer2)$School
 
 ### Fitting a random slopes, random intercepts model is often failing to converge
-lmer3 <- lmer(X3PAr ~ time + (1|School) + (time|School), data=df.tourney) # fails to converge
+lmer3 <- lmer(X3PAr ~ time + (1  + time|School), data=df.tourney) # fails to converge
 
 # list of convergence failures... 
 lmer3a <- update(lmer3,
@@ -91,7 +91,9 @@ coef(summary(lmer3d))
 # Look at differences b/w individual schools coefs
 head(coef(lmer2)$School)
 head(coef(lmer3d)$School)
-
+harvard_idx = which(df.tourney$School == "Harvard")[2]
+coef(lmer3d)$School[harvard_idx,] 
+df.tourney
 
 # Unsurprisingly, our random slopes and intercepts model is significantly better than 
 # our simple random intercepts model. It may be even more overfit though. 
@@ -169,7 +171,7 @@ p
 # the appropriate number 
 seg5 <- segmented(lm1, 
                   seg.Z = ~ time, 
-                  psi = c(3,10))
+                  psi = NA)
 
 summary(seg5)
 
@@ -207,7 +209,7 @@ slope(seg7)
 
 # get the fitted data
 seg7.fitted <- fitted(seg7)
-seg7.fitted.df <- data.frame(year = df.tourney$year, X3PAr = my.fitted)
+seg7.fitted.df <- data.frame(year = df.tourney$year, X3PAr = seg7.fitted)
 
 # plot the fitted model
 ggplot(seg7.fitted.df, aes(x = year, y = X3PAr)) + geom_line()
@@ -228,12 +230,23 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
 p 
 
 
-### T tests to determine whether or not slopes are significantly different
+### T tests to determine whether or not slopes are significantly different (bonferroni needed?)
 # https://influentialpoints.com/Training/simple_linear_regression-principles-properties-assumptions.htm
+slope(seg7)
 
 
 
-
+# Mixed Model Segmented
+new <- transform(df.tourney,cDays=Days-6.5)
+m3 <- lmer(Reaction ~ cDays:period+ (1 | Subject), sleepstudy)
+library(ggplot2); theme_set(theme_bw())    
+library(reshape2)
+g0 <- ggplot(sleepstudy,aes(Days,Reaction,group=Subject))+geom_line()
+pframe <- data.frame(Days=seq(0,8,length=101))
+pframe <- transform(pframe,cDays=Days-6.5,period=Days>6.5)
+## next line assumes latest version of lme4 -- you may need REform instead
+pframe$Reaction <- predict(m3,newdata=pframe,re.form=NA)
+pframe$Reaction2 <- predict(m0,newdata=pframe,re.form=NA)
 
 
 

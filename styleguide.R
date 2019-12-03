@@ -3,8 +3,8 @@
 if (!require('dplyr')) install.packages('dplyr'); library(dplyr)
 if (!require('ggplot2')) install.packages('ggplot2'); library(ggplot2)
 if (!require('hrbrthemes')) install.packages('hrbrthemes'); library(hrbrthemes)
-if (!require('magick')) install.packages('magick'); library(magick)
-if (!require('plotly')) install.packages('plotly'); library(plotly)
+# if (!require('magick')) install.packages('magick'); library(magick)
+# if (!require('plotly')) install.packages('plotly'); library(plotly)
 # Legend: https://stackoverflow.com/questions/14622421/how-to-change-legend-title-in-ggplot
 
 monochrome <- c('#760000', '#BE1E26', '#D84742', '#FF6B61', '#FF9586')
