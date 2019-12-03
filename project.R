@@ -11,14 +11,14 @@ if (!require('segmented')) install.packages('segmented'); library(segmented)
 # https://cran.r-project.org/web/packages/segmented/segmented.pdf
 
 # Read in Clean DF 
-
 df.clean <- add_time("complete_data_clean.csv")
+df.clean <- add_coach_change(df.clean)
 df.tourney <- add_time("tourney_data_clean.csv")
+df.tourney <- add_coach_change(df.tourney)
 
 # Check dimensions - len(unique schools) * len(unique years) must equal # of rows
 dim_checker(df.clean)
 dim_checker(df.tourney)
-
 
 # since we know that games are increasing can we make those statistics into proportions to control
 # for the specific effect
