@@ -54,3 +54,15 @@ get_prop_df <- function(df) {
   return(prop_df)
 }
 
+add_coach_change <- function(df) {
+  schools <- c("Syracuse", "Duke", "Oakland", "Davidson", "Lafayette", "Michigan", 
+               "Gonzaga", "Northwestern", "Yale", "Notre Dame", "Albany (NY)", 
+               "Saint Mary's (CA)", "Villanova", "Florida State", "Baylor", 
+               "Kansas", "North Carolina", "Western Michigan")
+  schools <- paste0('^', schools, '$')
+  pattern = paste(schools, collapse='|')
+  df$same.coach = grepl(pattern, df$School)
+  df[df$School == "Saint Mary's (CA)",]$same.coach = TRUE
+  df[df$School == "Albany (NY)",]$same.coach = TRUE
+  return(df)
+}
