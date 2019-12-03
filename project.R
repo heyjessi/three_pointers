@@ -164,21 +164,8 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
   theme_hodp()
 p 
 
-# Let's try to find segements using psi = NA 
-# This will iteratively try to find breakpoints though its likely to overestimate 
-# the appropriate number 
-seg5 <- segmented(lm1, 
-                  seg.Z = ~ time, 
-                  psi = NA)
 
-summary(seg5)
-
-# Suggests 2 breakpoints
-
-
-
-
-### Alternative method to search: Test for Breakpoints
+### Method to search: Test for Breakpoints
 davies.test(lm1, ~time)
 
 seg6 <- segmented(lm1, 
@@ -186,7 +173,7 @@ seg6 <- segmented(lm1,
                   psi = list(time = c(9.3)))
 # Check for existence of one breakpoint using the pscore.test command
 
-davies.test(seg4, ~time)
+davies.test(seg6, ~time)
 
 seg7 <- segmented(lm1, 
                   seg.Z = ~ time, 
