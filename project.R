@@ -91,9 +91,6 @@ coef(summary(lmer3d))
 # Look at differences b/w individual schools coefs
 head(coef(lmer2)$School)
 head(coef(lmer3d)$School)
-harvard_idx = which(df.tourney$School == "Harvard")[2]
-coef(lmer3d)$School[harvard_idx,] 
-df.tourney
 
 # Unsurprisingly, our random slopes and intercepts model is significantly better than 
 # our simple random intercepts model. It may be even more overfit though. 
@@ -236,17 +233,126 @@ slope(seg7)
 
 
 
-# Mixed Model Segmented
-new <- transform(df.tourney,cDays=Days-6.5)
-m3 <- lmer(Reaction ~ cDays:period+ (1 | Subject), sleepstudy)
-library(ggplot2); theme_set(theme_bw())    
-library(reshape2)
-g0 <- ggplot(sleepstudy,aes(Days,Reaction,group=Subject))+geom_line()
-pframe <- data.frame(Days=seq(0,8,length=101))
-pframe <- transform(pframe,cDays=Days-6.5,period=Days>6.5)
-## next line assumes latest version of lme4 -- you may need REform instead
-pframe$Reaction <- predict(m3,newdata=pframe,re.form=NA)
-pframe$Reaction2 <- predict(m0,newdata=pframe,re.form=NA)
+# Mixed Model Segmented - coaching change
+lmer8 <- lmer(X3PAr ~ time*same.coach + (1  + time|School) , data=df.tourney) # fails to converge
+# Use all fit to find a model that converges
+# Source: https://joshua-nugent.github.io/allFit/
+ncores <- detectCores()
+diff_optims <- allFit(lmer8, maxfun = 1e6, parallel = 'multicore', ncpus = ncores)
+is.OK <- sapply(diff_optims, is, "merMod")
+diff_optims.OK <- diff_optims[is.OK]
+lapply(diff_optims.OK,function(x) x@optinfo$conv$lme4$messages)
+
+# Nelder_Mead for convergence
+lmer8a <- update(lmer8, control=lmerControl(optimizer="Nelder_Mead"))
+
+# Summary
+summary(lmer8a)
+
+### COMPARE 
+# Fixed coefs
+coef(summary(lmer8a))
+
+# Look at differences b/w individual schools coefs
+head(coef(lmer8a)$School)
+
+### Let's do some plots
+# Get coefficients 
+year <- 2003:2017
+intercept.false <- summary(lmer8a)$coef[1,1]
+slope.false <- summary(lmer8a)$coef[2,1]
+intercept.true <- summary(lmer8a)$coef[3,1]
+slope.true <- summary(lmer8a)$coef[4,1]
+lmer8fn <- function(year, true_flag) { 
+  return(intercept.false + (year - 2003) * slope.false + 
+           intercept.true*true_flag + slope.true * (year - 2003) * true_flag)
+}
+
+p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) + 
+  geom_point() +
+  geom_segment(aes(x = 2003, y = lmer8fn(2003,0), xend = 2017, yend = lmer8fn(2017,0), 
+                   colour = '#EE3838'), 
+               data = df.tourney) + 
+  geom_segment(aes(x = 2003, y = lmer8fn(2003,1), xend = 2017, yend = lmer8fn(2017,1), 
+                   colour = '#78C4D4'), 
+               data = df.tourney) +
+  scale_colour_identity(name="Model Type", 
+                        breaks = c('#EE3838','#78C4D4'),
+                        labels = c("Coaching Change", "Same Coach"),
+                        guide = "legend") +
+  labs(title="3PAr Over Time - Pooled") +
+  xlab("Year") +
+  ylab("3PAr") +
+  theme_hodp()
+p
 
 
 
+
+# Mixed model by era 
+df.tourney$era <- as.factor((df.tourney$year > 2006) + (df.tourney$year > 2012))
+# Mixed Model Segmented - coaching change
+lmer9 <- lmer(X3PAr ~ time*era + (1  + time|School), data=df.tourney) # fails to converge
+# Use all fit to find a model that converges
+# Source: https://joshua-nugent.github.io/allFit/
+ncores <- detectCores()
+diff_optims <- allFit(lmer9, maxfun = 1e6, parallel = 'multicore', ncpus = ncores)
+is.OK <- sapply(diff_optims, is, "merMod")
+diff_optims.OK <- diff_optims[is.OK]
+lapply(diff_optims.OK,function(x) x@optinfo$conv$lme4$messages)
+
+# Nelder_Mead for convergence
+lmer9a <- update(lmer9, control=lmerControl(optimizer="Nelder_Mead"))
+summary(lmer9a)
+
+
+### Compare
+
+### COMPARE 
+# Fixed coefs
+coef(summary(lmer9a))
+
+# Look at differences b/w individual schools coefs
+head(coef(lmer9a)$School)
+
+### Let's do some plots
+# Get coefficients 
+year <- 2003:2017
+intercept.0 <- summary(lmer9a)$coef[1,1]
+slope.0 <- summary(lmer9a)$coef[2,1]
+intercept.1 <- summary(lmer9a)$coef[3,1]
+intercept.2 <- summary(lmer9a)$coef[4,1]
+slope.1 <- summary(lmer9a)$coef[5,1]
+slope.2 <- summary(lmer9a)$coef[6,1]
+lmer9fn <- function(year, era1, era2) { 
+  return(intercept.0 + (year - 2003) * slope.0 + 
+           intercept.1*era1 + slope.1 * (year - 2003) * era1 + 
+           intercept.2*era2 + slope.2 * (year - 2003) * era2)
+}
+df.tourney
+
+
+p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) + 
+  geom_point() +
+  geom_segment(aes(x = 2003, y = lmer9fn(2003,0,0), xend = 2006, yend = lmer9fn(2006,0,0), 
+                   colour = '#EE3838'), 
+               data = df.tourney) + 
+  geom_segment(aes(x = 2007, y = lmer9fn(2007,1,0), xend = 2012, yend = lmer9fn(2012,1,0), 
+                   colour = '#78C4D4'), 
+               data = df.tourney) +
+  geom_segment(aes(x = 2013, y = lmer9fn(2013,0,1), xend = 2017, yend = lmer9fn(2017,0,1), 
+                   colour = '#4B5973'), 
+               data = df.tourney) +
+  geom_vline(xintercept = 2012.5) +
+  geom_vline(xintercept = 2006.5) +
+  scale_colour_identity(name="Model Type:", 
+                        breaks = c('#EE3838','#78C4D4','#4B5973'),
+                        labels = c("2003-2006", "2007-2012", "2012-2013"),
+                        guide = "legend") +
+  annotate(geom="label", x = 2012.5, y = 0, label = "NBA Revolution", fill ="#F2F2F2", color = "black") +
+  annotate(geom="label", x = 2006.5, y = 0, label = "NCAA Rule Change", fill ="#F2F2F2", color = "black") +
+  labs(title="3PAr Over Time - Segmented Mixed Model") +
+  xlab("Year") +
+  ylab("3PAr") +
+  theme_hodp()
+p
