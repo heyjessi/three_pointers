@@ -12,10 +12,10 @@ if (!require('segmented')) install.packages('segmented'); library(segmented)
 # https://cran.r-project.org/web/packages/segmented/segmented.pdf
 
 # Read in Clean DF 
-
 df.clean <- add_time("complete_data_clean.csv")
 df.tourney <- add_time("tourney_data_clean.csv")
 names(df.tourney)
+
 # Check dimensions - len(unique schools) * len(unique years) must equal # of rows
 dim_checker(df.clean)
 dim_checker(df.tourney)
