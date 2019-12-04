@@ -364,17 +364,21 @@ df.tourney %>%
 # gets the minimum slopes, what patterns does this reveal
 
 sorted_alpha_school = df.tourney[order(df.tourney$School),]
+sorted_alpha_prop = get_newprop[order(get_newprop$`df.tourney$School`),]
 sorted_alpha_school$winner = (sorted_alpha_school$W.L. >= 0.5) * 1
 View(sorted_alpha_school)
 
 total_wins <- aggregate(sorted_alpha_school$winner, by=list(sorted_alpha_school$School), FUN=sum)[2]
+total_3s_made <- aggregate(sorted_alpha_prop$X3P, by=list(sorted_alpha_prop$`df.tourney$School`), FUN=mean)[2]
+total_3s_attempted <- aggregate(sorted_alpha_prop$X3PA, by=list(sorted_alpha_prop$`df.tourney$School`), FUN=mean)[2]
+total_sos <- aggregate(sorted_alpha_school$SOS, by=list(sorted_alpha_school$School), FUN=sum)[2]
 
 idx_min <- which.min(coef(lmer3d)$School[,2])
 school_list <- sort(unique(df.tourney$School)) # alphabetically sort the list
 school_list[idx_min]
 coef(lmer3d)$School[idx_min, 2]
 
-new_df <- data.frame(school = school_list, slope = coef(lmer3d)$School[,2], wins = total_wins)
+new_df <- data.frame(school = school_list, slope = coef(lmer3d)$School[,2], wins = total_wins, threes_m = total_3s_made, sos = total_sos)
 new_df = new_df[order(new_df$slope),]
 nrow(new_df)
 most_neg <- new_df[1:75, ]
@@ -403,6 +407,29 @@ ggplot(most_pos, aes(x = x)) +
   xlab("Wins in 15 years") +
   ylab("Frequency")
 
+# histograms for total threes made
+ggplot(most_neg, aes(x = x.1)) +
+  geom_histogram() +
+  geom_vline(aes(xintercept=mean(total_3s_made$x)),
+             color="red", size=1) +
+  geom_vline(aes(xintercept=mean(most_neg$x.1)),
+             color="blue",linetype="dashed", size=1) +
+  theme_hodp() +
+  labs(title="Bottom Third Teams For 3PAr Rate") +
+  xlab("3 Pointers Made") +
+  ylab("Frequency")
+
+ggplot(most_pos, aes(x = x.1)) +
+  geom_histogram() +
+  geom_vline(aes(xintercept=mean(total_3s_made$x)),
+             color="red", size=1) +
+  geom_vline(aes(xintercept=mean(most_pos$x.1)),
+             color="blue",linetype="dashed", size=1) +
+  theme_hodp() +
+  labs(title="Top Third Teams For 3PAr Rate") +
+  xlab("3 Pointers Made") +
+  ylab("Frequency")
+
 # check for with absolute value
 abs_df <- new_df
 abs_df$slope = abs(abs_df$slope)
@@ -419,6 +446,33 @@ ggplot(close_zero, aes(x = x)) +
   geom_vline(aes(xintercept=mean(close_zero$x)),
              color="blue",linetype="dashed", size=1) +
   theme_hodp() +
-  labs(title="Top Third of Teams Closest to 0 3PAr Rate Change") +
+  labs(title="Teams Closest to 0 3PAr Rate Change") +
   xlab("Wins in 15 years") +
   ylab("Frequency")
+
+ggplot(close_zero, aes(x = x.1)) +
+  geom_histogram() +
+  geom_vline(aes(xintercept=mean(total_3s_made$x)),
+             color="red", size=1) +
+  geom_vline(aes(xintercept=mean(close_zero$x.1)),
+             color="blue",linetype="dashed", size=1) +
+  theme_hodp() +
+  labs(title="Teams Closest to 0 3PAr Rate Change") +
+  xlab("3 Pointers Made") +
+  ylab("Frequency")
+
+# t tests: the aggregate mean totally different than the subsetted data?
+mean(total_wins$x)
+t.test(most_neg$x)
+t.test(most_pos$x)
+t.test(close_zero$x)
+
+t.test(most_neg$x.1)
+t.test(most_pos$x.1)
+t.test(close_zero$x.1)
+mean(total_3s_made$x)
+
+mean(most_neg$x.2)
+mean(most_pos$x.2)
+mean(close_zero$x.2)
+mean(total_sos$x)
