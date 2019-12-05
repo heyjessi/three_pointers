@@ -8,7 +8,7 @@ read_data <- function() {
                 "teams0708.csv", "teams0809.csv", "teams0910.csv", 
                 "teams1011.csv", "teams1112.csv", "teams1213.csv",
                 "teams1314.csv", "teams1415.csv", "teams1516.csv",
-                "teams1617.csv", "teams1718.csv")
+                "teams1617.csv", "teams1718.csv", "teams1819.csv")
   
   df <- read.csv('data/teams0304.csv')
   df$year <- 2003
@@ -19,9 +19,9 @@ read_data <- function() {
     teams$year <- as.numeric(year)
     df <- rbind(df, teams)
   }
+  
   return(df)
 }
-
 
 # Check Dimensions
 dim_checker <- function(df) {
@@ -44,11 +44,11 @@ add_time <- function(df_str){
 }
 
 get_prop_df <- function(df) {
-  drops_names <- c("year", "time", "W.L.", "SRS", "SOS","FTr","X3PAr",
-                   "TS.", "TRB.", "AST.",  "BLK.", "eFG.", "TOV.", "FT.FGA", 
-                   "FG.", "X3P.", "FT.")
+  drops_names <- c("year", "time", "W.L.", "SRS", "SOS","FTr","X3PAr","TS.", "TRB.", "AST.",  "BLK.", "eFG.", "TOV.", "FT.FGA", "FG.", "X3P.", "FT.", "same.coach")
   keep = df[drops_names]
   drop = df[ , !(names(df) %in% drops_names)]
+  keep$id = 1:nrow(keep)
+  #drop$id = 1:nrow(drop)
   new_drop = drop[, 3:ncol(drop)]/(drop$G)
   prop_df = cbind(new_drop, keep)
   return(prop_df)
