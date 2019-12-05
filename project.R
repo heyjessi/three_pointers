@@ -29,6 +29,28 @@ dim_checker(df.tourney)
 get_newprop = cbind(df.tourney$School, get_prop_df(df.tourney))
 get_newprop
 
+df.clean.noschool = df.clean[,2:length(df.clean)]
+top_cor_list = cor(df.clean.noschool)[,ncol(df.clean.noschool)-1]
+top_cor_list = sort(top_cor_list, decreasing = TRUE)
+top_cor_list = top_cor_list[3:length(top_cor_list)]
+top_cor_list
+list_top = names(top_cor_list)
+list_top
+
+# graphs
+df.clean.noschool %>%
+  group_by(time) %>%
+  summarise(mean_games = mean(G)) %>%
+  ggplot(df.clean.noschool, mapping = aes(x = time + 2003, y = mean_games)) +
+  geom_line(stat="identity") + ggtitle("Games Played Per Season in the NCAA") + 
+  ylim(25, 35) +
+  xlab("Year") +
+  ylab("Games")+
+  theme_hodp()
+
+# we noticed that games also increases overtime (it's one of the top predictors)
+plot(df.clean.noschool$time, df.clean.noschool$G)
+
 # Let's have X3PAr be our response
 # Check assumption of normal distribution
 p <- ggplot(df.tourney, aes(x=X3PAr)) +
@@ -349,17 +371,15 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
   theme_hodp()
 p
 
-# jess stuffs
+# EDA plot to show how average 3Ar changes with time
 df.tourney %>%
   group_by(time) %>%
   summarise(mean_three = mean(X3PAr)) %>%
   ggplot(df.tourney, mapping = aes(x = time + 2003, y = mean_three)) +
-  geom_line(stat="identity") + ggtitle("Average 3PAr Across the League") + 
+  geom_line(stat="identity") + ggtitle("Average 3PAr Across the NCAA") + 
   xlab("Year") +
   ylab("3PAr")+
   theme_hodp()
-
-# jess tests
 
 # gets the minimum slopes, what patterns does this reveal
 
@@ -461,18 +481,59 @@ ggplot(close_zero, aes(x = x.1)) +
   xlab("3 Pointers Made") +
   ylab("Frequency")
 
-# t tests: the aggregate mean totally different than the subsetted data?
+# t tests: the aggregate mean totally different than the subsetted data
 mean(total_wins$x)
 t.test(most_neg$x)
 t.test(most_pos$x)
 t.test(close_zero$x)
 
+# t tests - 3 pointers made
 t.test(most_neg$x.1)
 t.test(most_pos$x.1)
 t.test(close_zero$x.1)
 mean(total_3s_made$x)
 
-mean(most_neg$x.2)
-mean(most_pos$x.2)
-mean(close_zero$x.2)
-mean(total_sos$x)
+# more tests on the piece slopes
+piece.slopes = coef(lmer9a)$School
+era.zeroslopes = piece.slopes[, 2]
+era.oneslopes = era.zeroslopes + piece.slopes[, 5]
+era.twoslopes = era.zeroslopes + piece.slopes[, 6]
+
+piece_df <- data.frame(school = school_list, slope0 = era.zeroslopes, slope1 = era.oneslopes, slope2 = era.twoslopes, wins = total_wins, threes_m = total_3s_made)
+piece_df0 = piece_df[order(piece_df$slope0),]
+piece_df1 = piece_df[order(piece_df$slope1),]
+piece_df2 = piece_df[order(piece_df$slope2),]
+
+piece_df0_least <- piece_df0[1:50, ]
+piece_df0_most <- piece_df0[(nrow(piece_df0) - 50):nrow(piece_df0), ]
+piece_df1_least <- piece_df1[1:50, ]
+piece_df1_most <- piece_df1[(nrow(piece_df1) - 50):nrow(piece_df1), ]
+piece_df2_least <- piece_df2[1:50, ]
+piece_df2_most <- piece_df2[(nrow(piece_df2) - 50):nrow(piece_df2), ]
+
+# t tests for wins
+mean(total_wins$x)
+t.test(piece_df0_least$x)
+t.test(piece_df0_most$x)
+
+mean(total_wins$x)
+t.test(piece_df1_least$x)
+t.test(piece_df1_most$x)
+
+mean(total_wins$x)
+t.test(piece_df2_least$x)
+t.test(piece_df2_most$x)
+
+# t tests for 3 pointers made
+
+mean(total_3s_made$x)
+t.test(piece_df0_least$x.1)
+t.test(piece_df0_most$x.1)
+
+mean(total_3s_made$x)
+t.test(piece_df1_least$x.1)
+t.test(piece_df1_most$x.1)
+
+mean(total_3s_made$x)
+t.test(piece_df2_least$x.1)
+t.test(piece_df2_most$x.1)
