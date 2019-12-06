@@ -1,32 +1,47 @@
 # Jess, Anna and Seth Project
 # 12/6/19
-setwd("stat139finalproject/") # for jess only
+# project r markdown document
 
+```{r}
 source('packages.R')
 source('styleguide.R')
 source('helpers.R')
 source('cleaner.R')
+source('models.R')
+```
 
+# Get the Data
+```{r}
 # Read in Clean DF 
 df.clean <- add_time("complete_data_clean.csv")
 df.clean <- add_coach_change(df.clean)
 df.tourney <- add_time("tourney_data_clean.csv")
 df.tourney <- add_coach_change(df.tourney)
+```
 
+```{r}
 # Check dimensions - len(unique schools) * len(unique years) must equal # of rows
 dim_checker(df.clean)
 dim_checker(df.tourney)
+get_newprop = cbind(df.tourney$School, get_prop_df(df.tourney))
+```
 
-# gets the minimum slopes, what patterns does this reveal
+```{r}
+# gets the minimum slope
 sorted_alpha_school = df.tourney[order(df.tourney$School),]
 sorted_alpha_prop = get_newprop[order(get_newprop$`df.tourney$School`),]
 sorted_alpha_school$winner = (sorted_alpha_school$W.L. >= 0.5) * 1
+```
 
+```{r}
 total_wins <- aggregate(sorted_alpha_school$winner, by=list(sorted_alpha_school$School), FUN=sum)[2]
 total_3s_made <- aggregate(sorted_alpha_prop$X3P, by=list(sorted_alpha_prop$`df.tourney$School`), FUN=mean)[2]
 total_3s_attempted <- aggregate(sorted_alpha_prop$X3PA, by=list(sorted_alpha_prop$`df.tourney$School`), FUN=mean)[2]
 total_sos <- aggregate(sorted_alpha_school$SOS, by=list(sorted_alpha_school$School), FUN=sum)[2]
 
+```
+
+```{r}
 idx_min <- which.min(coef(lmer3d)$School[,2])
 school_list <- sort(unique(df.tourney$School)) # alphabetically sort the list
 school_list[idx_min]
@@ -34,7 +49,10 @@ coef(lmer3d)$School[idx_min, 2]
 
 new_df <- data.frame(school = school_list, slope = coef(lmer3d)$School[,2], wins = total_wins, threes_m = total_3s_made, sos = total_sos)
 new_df = new_df[order(new_df$slope),]
+```
 
+# Find the Schools Most Prone and Least Prone by taking the Absolute value (slopes closer to 0 will be least impacted by the change) and we define most affected as a larger absolute value
+```{r}
 # check for with absolute value
 abs_df <- new_df
 abs_df$slope = abs(abs_df$slope)
@@ -44,7 +62,9 @@ abs_df
 close_zero_least <- abs_df[1:50,]
 close_zero
 close_zero_most <- abs_df[181:230,]
+```
 
+```{r}
 # histograms - teams least prone
 
 ggplot(close_zero_least, aes(x = x)) +
@@ -73,7 +93,9 @@ ggplot(close_zero_least, aes(x = x.1)) +
   scale_color_manual("Means", values = cols) +
   xlab("3 Pointers Made") +
   ylab("Frequency")
+```
 
+```{r}
 # histogram teams most prone
 
 ggplot(close_zero_most, aes(x = x)) +
@@ -102,13 +124,19 @@ ggplot(close_zero_most, aes(x = x.1)) +
   theme(legend.position = c(0.8, 0.2)) +
   xlab("3 Pointers Made") +
   ylab("Frequency")
+```
 
+# Comparing the Means with formal hypothesis testing
+```{r}
 # between the most and least affected teams - games
 t.test(close_zero_least$x, close_zero_most$x)
 
 # between the msot and least affected - 3 pointers made per game
 t.test(close_zero_least$x.1, close_zero_most$x.1)
+```
 
+# Conducting a similar method on the piecewise linear model
+```{r}
 # more tests on the piece slopes
 piece.slopes = coef(lmer9a)$School
 piece.slopes$time = abs(piece.slopes$time)
@@ -122,7 +150,10 @@ piece_df <- data.frame(school = school_list, slope0 = era.zeroslopes, slope1 = e
 piece_df0 = piece_df[order(piece_df$slope0),]
 piece_df1 = piece_df[order(piece_df$slope1),]
 piece_df2 = piece_df[order(piece_df$slope2),]
+```
 
+# Comparing the Means for piecewise with formal hypothesis testing
+```{r}
 piece_df0_least <- piece_df0[1:50, ]
 piece_df0_most <- piece_df0[(nrow(piece_df0) - 50):nrow(piece_df0), ]
 piece_df1_least <- piece_df1[1:50, ]
@@ -141,13 +172,10 @@ mean(total_3s_made$x)
 t.test(piece_df0_least$x.1, piece_df0_most$x.1)
 t.test(piece_df1_least$x.1, piece_df1_most$x.1)
 t.test(piece_df2_least$x.1, piece_df2_most$x.1)
+```
 
-mean(most_neg$x.2)
-mean(most_pos$x.2)
-mean(close_zero$x.2)
-mean(total_sos$x)
-
-#annas stuff
+# Comparisons between Schools
+```{r}
 
 #eda correlation
 data <- read.csv('data/full_data_raw.csv')
@@ -160,7 +188,9 @@ p <- ggcorrplot(cor) +
   theme(axis.text.x=element_text(angle=60))
 p
 
+```
 
+```{r}
 #look at effects for individual teams
 uva = df.tourney[df.tourney$School == 'Virginia',]
 nova = df.tourney[df.tourney$School == 'Villanova',]
@@ -176,29 +206,40 @@ p <- ggplot(nova, aes(x = time + 2003, y = X3PAr)) +
   #ylim(c(0,0.6)) + 
   theme_hodp()
 p
+```
 
+```{r}
 #plot villanova and uva by color
 p <- ggplot(data_teams, aes(x = time + 2003, y = X3PAr, color = School)) + 
   geom_point(aes(color = School))
 p
+```
 
+```{r}
 #interaction between time and school
 lmer9 <- lmer(X3PAr ~ time*era + (1  + time|School), data=data_teams) # fails to converge
 lm2 <- lm(X3PAr ~ time*School, data_teams)
 summary(lm2)
 names(df.clean)
 
+```
 
+```{r}
 #interaction between school and time and time and era
 data_teams$era <- as.factor((data_teams$year > 2006) + (data_teams$year > 2012))
 lm3 <- lm(X3PAr ~ time*(School + era), data_teams)
 lmer10 <- lmer(X3PAr ~ time*era + (1  + time|School), data=data_teams) # fails to converge
+```
 
+```{r}
 # Compare mixed model to lm 
 summary(lm3)
 summary(lmer10)
 AIC(lm3)
 AIC(lmer10)
+```
+
+```{r}
 # lm outperforms mixed model
 
 intercept.0 <- summary(lm3)$coef[1,1]t
@@ -209,7 +250,9 @@ intercept.2 <- summary(lm3)$coef[5,1]
 slope.virginia <- summary(lm3)$coef[6,1]
 slope.1 <- summary(lm3)$coef[7,1]
 slope.2 <- summary(lm3)$coef[8,1]
+```
 
+```{r}
 #plot lm3
 year <- 2003:2017
 
@@ -224,7 +267,9 @@ fnuva <- function(year, era1, era2) {
            intercept.1*era1 + slope.1 * (year - 2003) * era1 + 
            intercept.2*era2 + slope.2 * (year - 2003) * era2)
 }
+```
 
+```{r}
 #plot interaction between school and time and time and era for just uva
 p <- ggplot(data_teams, aes(x = time + 2003, y = X3PAr)) + 
   geom_point() +
@@ -251,7 +296,9 @@ p <- ggplot(data_teams, aes(x = time + 2003, y = X3PAr)) +
   theme_hodp()
 p
 
+```
 
+```{r}
 #plot interaction between school and time and time and era for both schools
 p <- ggplot(data_teams, aes(x = time + 2003, y = X3PAr, color = School)) + 
   geom_point(aes(color = School)) +
@@ -285,9 +332,9 @@ p <- ggplot(data_teams, aes(x = time + 2003, y = X3PAr, color = School)) +
   ylab("3PAr") +
   theme_hodp()
 p
+```
 
-
-
+```{r}
 #interaction between school and time and time and era and school and era
 data_teams$era <- as.factor((data_teams$year > 2006) + (data_teams$year > 2012))
 lm4 <- lm(X3PAr ~ time*(School + era) +School*era , data_teams)
@@ -349,5 +396,5 @@ p <- ggplot(data_teams, aes(x = time + 2003, y = X3PAr, color = School)) +
   ylab("3PAr") +
   theme_hodp()
 p
-
+```
 
