@@ -77,13 +77,6 @@ length(unique(df_complete$School))
 # Write Clean Df
 write.csv(df_complete, file = "data/complete_data_clean.csv")
 
-# Read in Clean DF 
-df.clean <- read.csv("data/complete_data_clean.csv")
-
-
-
-
-
 
 ### Tournament Teams for Simpler Model ### 
 
@@ -117,33 +110,4 @@ table(df_tourney_complete$School)
 
 write.csv(df_tourney_complete, file = "data/tourney_data_clean.csv")
 
-
-
-
-
-
-### APPENDIX 
-
-# We do have 16 NA's for ORB. Let's investigate: 
-# rows_ORB <- full_df[which(is.na(full_df$ORB)),]
-# 
-# # 15/16 of these have values of TRB. that we can use for imputation 
-# indices_ORB <- which(is.na(full_df$ORB))
-# full_df$ORB[indices_ORB] <- round(full_df$TRB.[indices_ORB]/100 * full_df$TRB[indices_ORB])
-# 
-# 
-# 
-# df_complete$ORB[is.na(df_complete$ORB)] <- round(mean(df_complete$ORB, na.rm = T))
-# 
-# imputer <- function(df, indices, var_of_interest) {
-#   col <- df[var_of_interest] 
-#   for (index in indices) {
-#     row <- df[index, ]
-#     col[index] <- mean(col[which(df$School == row$School)])
-#   }
-#   full_df[var_of_interest] <- col 
-# }
-
-
-# We have one NA for TOV and PF's. Let's impute the mean for those 
 

@@ -1,9 +1,9 @@
 # Jess, Anna and Seth Project EDA
-# X3P.
 # 11/29/19
 source('styleguide.R')
 source('helpers.R')
 source('packages.R')
+source('cleaner.R')
 # https://cran.r-project.org/web/packages/segmented/segmented.pdf
 
 # Read in Clean DF 
