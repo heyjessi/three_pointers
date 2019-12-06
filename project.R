@@ -2,18 +2,10 @@
 # 11/29/19
 setwd("stat139finalproject/") # for jess only
 
+source('packages.R')
 source('styleguide.R')
 source('helpers.R')
 source('cleaner.R')
-# Packages for optimizers
-if (!require('optimx')) install.packages('optimx'); library(optimx)
-if (!require('parallel')) install.packages('parallel'); library(parallel)
-if (!require('minqa')) install.packages('minqa'); library(minqa)
-if (!require('lme4')) install.packages('lme4'); library(lme4) # for mixed models 
-if (!require('segmented')) install.packages('segmented'); library(segmented)
-if (!require('dplyr')) install.packages('dplyr'); library(dplyr)
-if (!require('ggcorrplot')) install.packages('ggcorrplot'); library(ggcorrplot)
-# https://cran.r-project.org/web/packages/segmented/segmented.pdf
 
 # Read in Clean DF 
 df.clean <- add_time("complete_data_clean.csv")
@@ -25,63 +17,33 @@ df.tourney <- add_coach_change(df.tourney)
 dim_checker(df.clean)
 dim_checker(df.tourney)
 
-#### EDA ####
-
-# since we know that games are increasing can we make those statistics into 
-# proportions to control for the specific effect
-get_newprop = cbind(df.tourney$School, get_prop_df(df.tourney))
-get_newprop
-
-df.clean.noschool = df.clean[,2:length(df.clean)]
-top_cor_list = cor(df.clean.noschool)[,ncol(df.clean.noschool)-1]
-top_cor_list = sort(top_cor_list, decreasing = TRUE)
-top_cor_list = top_cor_list[3:length(top_cor_list)]
-top_cor_list
-list_top = names(top_cor_list)
-list_top
-
-# graphs
-df.clean.noschool %>%
-  group_by(time) %>%
-  summarise(mean_games = mean(G)) %>%
-  ggplot(df.clean.noschool, mapping = aes(x = time + 2003, y = mean_games)) +
-  geom_line(stat="identity") + ggtitle("Games Played Per Season in the NCAA") + 
-  ylim(25, 35) +
-  xlab("Year") +
-  ylab("Games")+
-  theme_hodp()
-
-# we noticed that games also increases over time (it's one of the top predictors)
-plot(df.clean.noschool$time, df.clean.noschool$G)
-
-# Let's have X3PAr be our response
-# Check assumption of normal distribution
-p <- ggplot(df.tourney, aes(x=X3PAr)) +
-  geom_histogram(colour="black", fill='#EE3838') + 
-  labs(title="3PAr Histogram") +
-  xlab("3PAr") +
-  ylab("Counts") +
-  theme_hodp()
-p
-
 #### MODELS ####
 
-# Model 1: pool all teams together, OLS model for 3PAr change over time
+### Model 1: pool all teams together, OLS model for 3PAr change over time
 lm1 <- lm(X3PAr ~ time, df.tourney)
 summary(lm1)
+
+# Model 1: Control for team no pooling, OLS model for 3PAr change over time
+lm1a <- lm(X3PAr ~ time, df.tourney)
+summary(lm1a)
+names(df.clean)
 names(df.clean)
 
 p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) + 
   geom_point() +
   stat_smooth(method = "lm", col = '#EE3838', se = F) +   
-  labs(title="3PAr Over Time - Pooled") +
+  labs(title="3PAr Over Time - Mod 1") +
   xlab("Year") +
   ylab("3PAr") +
   #ylim(c(0,0.6)) + 
   theme_hodp()
 p
 
-# Model 2: Mixed Model, fixed effect of time, random intercept stratified on School
+
+
+
+
+### Model 2: Mixed Model, fixed effect of time, random intercept stratified on School
 lmer2 <- lmer(X3PAr ~ time + (1 | School), data=df.tourney)
 summary(lmer2)
 coef(summary(lmer2))
@@ -90,7 +52,7 @@ coef(lmer2)$School
 # split into categories -- > see if there are  
 # binary indicator as for if they were a winning team or losing team for most of the seasons
 
-### Fitting a random slopes, random intercepts model is often failing to converge
+#Fitting a random slopes, random intercepts model may fail to converge
 lmer3 <- lmer(X3PAr ~ time + (1  + time|School), data=df.tourney) # fails to converge
 
 # list of convergence failures... 
@@ -149,21 +111,21 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
   #ylim(c(0,0.6)) + 
   theme_hodp()
 p
+# Very similar fixed effects vs. Completely pooled OLS
 
-# ... yeah it's just the same damn line which isn't surprising
 
 
-### SEGMENTED REGRESSION ###
+
+
+
+
+#### SEGMENTED REGRESSION ####
 # Using the segmented package
 # have to provide estimates for breakpoints.
-# apriori guess of 10 based on Curry 2015 MVP season,   
+# apriori guess of 3 based on when the rule change was announced,   
 seg4 <- segmented(lm1, 
                     seg.Z = ~ time, 
-                    psi = list(time = c(10)))
-
-
-summary(seg4)
-
+                    psi =c(3,10))
 # display the summary
 summary(seg4)
 
@@ -197,7 +159,7 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
 p 
 
 
-### Method to search: Test for Breakpoints
+# Method Test if breakpoints are significant
 davies.test(lm1, ~time)
 
 seg6 <- segmented(lm1, 
@@ -210,11 +172,14 @@ davies.test(seg6, ~time)
 seg7 <- segmented(lm1, 
                   seg.Z = ~ time, 
                   psi = list(time = c(3.1, 9.3)))
-
+summary(seg7)
 davies.test(seg7, ~time)
 
+
+
+
 # 2 Breakpoints
-### between the 2006-2007 and 2007-08 seasons - Rule change was announced in May 2007 
+# between the 2006-2007 and 2007-08 seasons - Rule change was announced in May 2007 
 # https://www.espn.com/mens-college-basketball/news/story?id=2859065
 
 # Then another, more significant breakpoint between 2012-2013 and 2013-2014 seasons 
@@ -246,13 +211,13 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
   theme_hodp()
 p 
 
-### T tests to determine whether or not slopes are significantly different (bonferroni needed?)
-# https://influentialpoints.com/Training/simple_linear_regression-principles-properties-assumptions.htm
 slope(seg7)
 
+
+### Unsuccessful Aside
 # Mixed Model Segmented - coaching change
 lmer8 <- lmer(X3PAr ~ time*same.coach + (1  + time|School) , data=df.tourney) # fails to converge
-  # Use all fit to find a model that converges
+# Use all fit to find a model that converges
 # Source: https://joshua-nugent.github.io/allFit/
 ncores <- detectCores()
 diff_optims <- allFit(lmer8, maxfun = 1e6, parallel = 'multicore', ncpus = ncores)
@@ -304,8 +269,14 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
 p
 
 
-# Mixed model by era 
+
+
+
+
+### Model 9 ###
+### Mixed model by era ###
 df.tourney$era <- as.factor((df.tourney$year > 2006) + (df.tourney$year > 2012))
+
 # Mixed Model Segmented - coaching change
 lmer9 <- lmer(X3PAr ~ time*era + (1  + time|School), data=df.tourney) # fails to converge
 # Use all fit to find a model that converges
@@ -359,14 +330,14 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
   geom_segment(aes(x = 2007, y = lmer9fn(2007,1,0), xend = 2012, yend = lmer9fn(2012,1,0), 
                    colour = '#78C4D4'), 
                data = df.tourney) +
-  geom_segment(aes(x = 2013, y = lmer9fn(2013,0,1), xend = 2017, yend = lmer9fn(2017,0,1), 
+  geom_segment(aes(x = 2013, y = lmer9fn(2013,0,1), xend = 2018, yend = lmer9fn(2018,0,1), 
                    colour = '#4B5973'), 
                data = df.tourney) +
   geom_vline(xintercept = 2012.5) +
   geom_vline(xintercept = 2006.5) +
   scale_colour_identity(name="Model Type:", 
                         breaks = c('#EE3838','#78C4D4','#4B5973'),
-                        labels = c("2003-2006", "2007-2012", "2012-2013"),
+                        labels = c("2003-2006", "2007-2012", "2013-2018"),
                         guide = "legend") +
   annotate(geom="label", x = 2012.5, y = 0, label = "NBA Revolution", fill ="#F2F2F2", color = "black") +
   annotate(geom="label", x = 2006.5, y = 0, label = "NCAA Rule Change", fill ="#F2F2F2", color = "black") +
@@ -376,18 +347,52 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
   theme_hodp()
 p
 
-# EDA plot to show how average 3Ar changes with time
-df.tourney %>%
-  group_by(time) %>%
-  summarise(mean_three = mean(X3PAr)) %>%
-  ggplot(df.tourney, mapping = aes(x = time + 2003, y = mean_three)) +
-  geom_line(stat="identity") + ggtitle("Average 3PAr Across the NCAA") + 
-  xlab("Year") +
-  ylab("3PAr")+
-  theme_hodp()
+# lmer9a vs. lmer3d anova test
+anova(lmer3d, lmer9a)
+
+
+### Contrast t-tests ###
+# Test if slopes are significantly different
+# Create a vector of coefficients to test if difference between slope for 
+# era0*time and era1*time is 0 or not
+coefs <- summary(lmer9a)$coef[,1]
+
+# Construct our vector of differences C
+C = c(0,0,0,0,-1,0)
+contrast_test_lmer9a(C,coefs)
+# slopes are different
+
+# Test if difference between slope for era0*time and era2*time is 0 or not
+# Construct our vector of differences C
+C = c(0,0,0,0,0,-1)
+contrast_test_lmer9a(C,coefs)
+# slopes are different
+
+# Test if difference between slope for era0*time and era2*time is 0 or not
+# Construct our vector of differences C
+C = c(0,0,0,0,0,-1)
+contrast_test_lmer9a(C,coefs)
+# slopes are different
+
+# Test if difference between slope for era1*time and era2*time is 0 or not
+# Construct our vector of differences C
+C = c(0,0,0,0,1,-1)
+contrast_test_lmer9a(C,coefs)
+# slopes are different
+
+# Pairwise tests were performed. The problem of multiple comparisons is ignored here 
+# (a) because our pvalues are <<0.001 and (b) because we are only doing 3 tests to
+# compare all of the slopes.
+
+
+
+########## END SETH ########## 
+
+
+
+
 
 # gets the minimum slopes, what patterns does this reveal
-
 sorted_alpha_school = df.tourney[order(df.tourney$School),]
 sorted_alpha_prop = get_newprop[order(get_newprop$`df.tourney$School`),]
 sorted_alpha_school$winner = (sorted_alpha_school$W.L. >= 0.5) * 1
@@ -745,4 +750,5 @@ p <- ggplot(data_teams, aes(x = time + 2003, y = X3PAr, color = School)) +
   ylab("3PAr") +
   theme_hodp()
 p
+
 

@@ -1,7 +1,7 @@
 # Abstracted Helper Functions 
 # Jess, Anna and Seth Project
 # 11/29/19
-
+source('packages.R')
 # Read the data
 read_data <- function() {
   df_names <- c("teams0405.csv", "teams0506.csv", "teams0607.csv",
@@ -66,3 +66,15 @@ add_coach_change <- function(df) {
   df[df$School == "Albany (NY)",]$same.coach = TRUE
   return(df)
 }
+
+contrast_test_lmer9a <- function(C, coefs) {
+  estimate = t(coefs)%*%C 
+  std.err =sqrt(t(C) %*%vcov(lmer9a) %*%C)
+  contrast.t = estimate/std.err
+
+  p.value = 2*(1-pt(abs(contrast.t[1]),df=df.residual(lmer9a) - 2)); 
+  return(list(tstat=contrast.t, pval = p.value))
+}
+
+
+# Calculate the contrast t-statistic via matrix multiplication
