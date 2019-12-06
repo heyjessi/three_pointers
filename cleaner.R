@@ -1,8 +1,7 @@
 # Jess, Anna and Seth Project
 # 11/29/19
 source('helpers.R')
-if (!require('tidyverse')) install.packages('tidyverse'); library(tidyverse)
-if (!require('dplyr')) install.packages('dplyr'); library(dplyr)
+source('packages.R')
 
 ### READ IN THE DATA ###
 # Create full dataframe
@@ -42,8 +41,6 @@ table(full_df$School)
 
 
 
-
-
 ### MISSING VALUES ###
 # Check that values make sense in the summary 
 summary(full_df)
@@ -51,10 +48,6 @@ summary(full_df)
 # Fortunately, we don't have any missing values for anything relating to 3-pointers 
 # There are a few missing values, but I'm not certain we'll even use those columns 
 # as predictors, so we'll cross that bridge when we get there. 
-
-
-
-
 
 
 ### SUBSET DF INTO COMPLETE AND INCOMPLETE ###
@@ -108,6 +101,7 @@ df_tourney_complete <- df_tourney[which(!(df_tourney$School %in% schools_incompl
 
 table(df_tourney_complete$School)
 
+# Write csv
 write.csv(df_tourney_complete, file = "data/tourney_data_clean.csv")
 
 

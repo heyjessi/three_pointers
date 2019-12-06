@@ -1,5 +1,6 @@
-#### Most Recent Debate ####
-# Step 0: HODP Theme
+# Graphics Theme
+# Jess, Anna and Seth Project
+# 12/06/19
 source('packages.R')
 # Legend: https://stackoverflow.com/questions/14622421/how-to-change-legend-title-in-ggplot
 

@@ -1,5 +1,5 @@
 # Jess, Anna and Seth Project
-# 11/29/19
+# 12/6/19
 setwd("stat139finalproject/") # for jess only
 
 source('packages.R')

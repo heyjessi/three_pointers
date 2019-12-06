@@ -42,7 +42,8 @@ add_time <- function(df_str){
   df$time <- df$year - 2003
   return(df)
 }
-df.tourney
+
+# Per game-ify certain columns
 get_prop_df <- function(df) {
   if ("same.coach" %in% names(df)) { 
     drops_names <- c("year", "time", "W.L.", "SRS", "SOS","FTr","X3PAr","TS.", "TRB.",
@@ -61,6 +62,7 @@ get_prop_df <- function(df) {
   return(prop_df)
 }
 
+# Add coaching change variable
 add_coach_change <- function(df) {
   schools <- c("Syracuse", "Duke", "Oakland", "Davidson", "Lafayette", "Michigan", 
                "Gonzaga", "Northwestern", "Yale", "Notre Dame", "Albany (NY)", 
@@ -74,6 +76,7 @@ add_coach_change <- function(df) {
   return(df)
 }
 
+# Contrast test for lmer9a
 contrast_test_lmer9a <- function(C, coefs) {
   estimate = t(coefs)%*%C 
   std.err =sqrt(t(C) %*%vcov(lmer9a) %*%C)
@@ -84,4 +87,4 @@ contrast_test_lmer9a <- function(C, coefs) {
 }
 
 
-# Calculate the contrast t-statistic via matrix multiplication
+

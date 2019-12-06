@@ -402,4 +402,4 @@ titles = c("Simple OLS",
            "Segmented Random Slopes and Intercepts")
 data.frame(titles, AICs)
 
-########## END SETH ########## 
+########## EOF ########## 
