@@ -8,5 +8,5 @@ if (!require('segmented')) install.packages('segmented'); library(segmented)
 # https://cran.r-project.org/web/packages/segmented/segmented.pdf
 if (!require('dplyr')) install.packages('dplyr'); library(dplyr)
 if (!require('ggplot2')) install.packages('ggplot2'); library(ggplot2)
-if (!require('hrbrthemes')) install.packages('hrbrthemes'); library(hrbrthemes)
+#if (!require('hrbrthemes')) install.packages('hrbrthemes'); library(hrbrthemes)
 if (!require('ggcorrplot')) install.packages('ggcorrplot'); library(ggcorrplot)

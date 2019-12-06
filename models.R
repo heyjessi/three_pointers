@@ -1,6 +1,6 @@
 # Jess, Anna and Seth Models
 # 12/6/19
-setwd("stat139finalproject/") # for jess only
+#setwd("stat139finalproject/") # for jess only
 
 source('packages.R')
 source('styleguide.R')
@@ -52,23 +52,6 @@ coef(lmer2)$School
 
 #Fitting a random slopes, random intercepts model may fail to converge
 lmer3 <- lmer(X3PAr ~ time + (1  + time|School), data=df.tourney) # fails to converge
-
-# list of convergence failures... 
-lmer3a <- update(lmer3,
-                 REML = FALSE, 
-                 control = lmerControl(
-                   optimzer ='optimx', optCtrl=list(method='L-BFGS-B')))
-lmer3b <- update(lmer3, 
-                 control=lmerControl(optCtrl=list(ftol_abs=1e-8,xtol_abs=1e-8)))
-lmer3c <- update(lmer3, control=lmerControl(optimizer="bobyqa"))
-
-# Use all fit to find a model that converges
-# Source: https://joshua-nugent.github.io/allFit/
-ncores <- detectCores()
-diff_optims <- allFit(lmer3, maxfun = 1e6, parallel = 'multicore', ncpus = ncores)
-is.OK <- sapply(diff_optims, is, "merMod")
-diff_optims.OK <- diff_optims[is.OK]
-lapply(diff_optims.OK,function(x) x@optinfo$conv$lme4$messages)
 
 ### Nelder_Mead converges successfully!!! - but only for the df.tourney
 lmer3d <- update(lmer3, control=lmerControl(optimizer="Nelder_Mead"))
