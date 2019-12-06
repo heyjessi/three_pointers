@@ -18,7 +18,6 @@ dim_checker(df.tourney)
 # Per game-ify
 get_newprop = cbind(df.tourney$School, get_prop_df(df.tourney))
 
-# Let's have X3PAr be our response
 # Check assumption of normal distribution
 p <- ggplot(get_newprop, aes(x=X3P.)) +
   geom_histogram(colour="black", fill='#EE3838') + 
@@ -40,6 +39,17 @@ p <- ggplot(df.tourney, aes(x=X3PAr)) +
   xlab("3PAr") +
   ylab("Counts") +
   theme_hodp()
+p
+
+
+p <- ggplot(df.tourney, aes(sample = X3PAr)) +
+  stat_qq(aes(color = '#EE3838')) + 
+  stat_qq_line() + 
+  labs(title="3PAr QQ Plot") +
+  xlab("Theoretical") +
+  ylab("Sample") +
+  theme_hodp()+
+  theme(legend.position = "none") 
 p
 
 # X3P hist
