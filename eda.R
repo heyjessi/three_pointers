@@ -75,22 +75,6 @@ p <- ggplot(get_newprop, aes(x = time + 2003, y = X3P.)) +
   theme_hodp()
 p
 
-### AIC TABLE ### 
-# Make AIC Table
-simple_OLS_AIC = AIC(lm1)
-lmer2_AIC = AIC(lmer2)
-lmer3d_AIC = AIC(lmer3d)
-lin_seg_AIC = AIC(seg7)
-mm_final_AIC = AIC(lmer9a)
-
-AICs = c(simple_OLS_AIC,lmer2_AIC, lmer3d_AIC, lin_seg_AIC,mm_final_AIC)
-titles = c("Simple OLS",
-           "Simple Random Intercepts", 
-           "Simple Random Slopes and Intercepts", 
-           "Segmented OLS", 
-           "Segmented Random Slopes and Intercepts")
-data.frame(titles, AICs)
-
 
 
 #### Games Increasing ####
