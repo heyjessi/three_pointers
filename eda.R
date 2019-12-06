@@ -41,7 +41,7 @@ p <- ggplot(df.tourney, aes(x=X3PAr)) +
   theme_hodp()
 p
 
-
+# QQ plot
 p <- ggplot(df.tourney, aes(sample = X3PAr)) +
   stat_qq(aes(color = '#EE3838')) + 
   stat_qq_line() + 
@@ -127,4 +127,20 @@ df.tourney %>%
   xlab("Year") +
   ylab("3PAr")+
   theme_hodp()
+
+
+
+### CORRELATION PLOT ###
+
+#eda correlation
+data <- read.csv('data/full_data_raw.csv')
+wl <- data %>% select(TeamW, TeamL, W.L., ConfW, ConfL, HomeW, HomeL, AwayW, AwayL)
+cor <- round(cor(wl), 1)
+p <- ggcorrplot(cor) + 
+  labs(title='Corr Plot for W-L Vars') +
+  xlab('') + ylab('') + 
+  theme_hodp() + 
+  theme(axis.text.x=element_text(angle=60)) + 
+  theme(legend.position="right")
+p
 
