@@ -54,7 +54,7 @@ p <- ggplot(get_newprop, aes(x = time + 2003, y = X3PA)) +
   stat_smooth(method = "lm", col = '#EE3838', se = F) +   
   labs(title="3P Attempted per Game over Time") +
   xlab("Year") +
-  ylab("3P.") +
+  ylab("3PA per Game") +
   #ylim(c(0,0.6)) + 
   theme_hodp()
 p
@@ -63,7 +63,7 @@ p
 p <- ggplot(get_newprop, aes(x = time + 2003, y = X3P.)) + 
   geom_point() +
   stat_smooth(method = "lm", col = '#EE3838', se = F) +   
-  labs(title="3P Attempted per Game over Time") +
+  labs(title="3P Percentage over Time") +
   xlab("Year") +
   ylab("3P.") +
   #ylim(c(0,0.6)) + 

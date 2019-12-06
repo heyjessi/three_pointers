@@ -25,8 +25,10 @@ df.tourney <- add_coach_change(df.tourney)
 dim_checker(df.clean)
 dim_checker(df.tourney)
 
-# since we know that games are increasing can we make those statistics into proportions to control
-# for the specific effect
+#### EDA ####
+
+# since we know that games are increasing can we make those statistics into 
+# proportions to control for the specific effect
 get_newprop = cbind(df.tourney$School, get_prop_df(df.tourney))
 get_newprop
 
@@ -49,7 +51,7 @@ df.clean.noschool %>%
   ylab("Games")+
   theme_hodp()
 
-# we noticed that games also increases overtime (it's one of the top predictors)
+# we noticed that games also increases over time (it's one of the top predictors)
 plot(df.clean.noschool$time, df.clean.noschool$G)
 
 # Let's have X3PAr be our response
@@ -61,6 +63,8 @@ p <- ggplot(df.tourney, aes(x=X3PAr)) +
   ylab("Counts") +
   theme_hodp()
 p
+
+#### MODELS ####
 
 # Model 1: pool all teams together, OLS model for 3PAr change over time
 lm1 <- lm(X3PAr ~ time, df.tourney)
