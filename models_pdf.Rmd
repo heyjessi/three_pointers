@@ -1,7 +1,12 @@
-# Jess, Anna and Seth Models
-# 12/6/19
-setwd("stat139finalproject/") # for jess only
+---
+title: "models_pdf.rmd"
+author: "Billiau/Eng/Li"
+date: "12/6/2019"
+output: pdf_document
+---
 
+## Set up
+```{r setup}
 source('packages.R')
 source('styleguide.R')
 source('helpers.R')
@@ -16,9 +21,13 @@ df.tourney <- add_coach_change(df.tourney)
 # Check dimensions - len(unique schools) * len(unique years) must equal # of rows
 dim_checker(df.clean)
 dim_checker(df.tourney)
+```
 
-#### MODELS ####
+## Models 
 
+### Model 1: pool all teams together, OLS model for 3PAr change over time
+
+```{r cars}
 ### Model 1: pool all teams together, OLS model for 3PAr change over time
 lm1 <- lm(X3PAr ~ time, df.tourney)
 summary(lm1)
@@ -36,39 +45,25 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
   #ylim(c(0,0.6)) + 
   theme_hodp()
 p
+```
 
+### Model 2 & 3
+Model 2 - Mixed Model, fixed effect of time, random intercept stratified on School
+Model 3 - Mixed Model, fixed effect of time, random slopes and intercept stratified on School
+ 
+Includes model comparison 
 
-
-
-
-### Model 2: Mixed Model, fixed effect of time, random intercept stratified on School
+```{r}
 lmer2 <- lmer(X3PAr ~ time + (1 | School), data=df.tourney)
 summary(lmer2)
-coef(summary(lmer2))
-coef(lmer2)$School
+head(coef(summary(lmer2)))
+head(coef(lmer2)$School)
 
 # split into categories -- > see if there are  
 # binary indicator as for if they were a winning team or losing team for most of the seasons
 
 #Fitting a random slopes, random intercepts model may fail to converge
 lmer3 <- lmer(X3PAr ~ time + (1  + time|School), data=df.tourney) # fails to converge
-
-# list of convergence failures... 
-lmer3a <- update(lmer3,
-                 REML = FALSE, 
-                 control = lmerControl(
-                   optimzer ='optimx', optCtrl=list(method='L-BFGS-B')))
-lmer3b <- update(lmer3, 
-                 control=lmerControl(optCtrl=list(ftol_abs=1e-8,xtol_abs=1e-8)))
-lmer3c <- update(lmer3, control=lmerControl(optimizer="bobyqa"))
-
-# Use all fit to find a model that converges
-# Source: https://joshua-nugent.github.io/allFit/
-ncores <- detectCores()
-diff_optims <- allFit(lmer3, maxfun = 1e6, parallel = 'multicore', ncpus = ncores)
-is.OK <- sapply(diff_optims, is, "merMod")
-diff_optims.OK <- diff_optims[is.OK]
-lapply(diff_optims.OK,function(x) x@optinfo$conv$lme4$messages)
 
 ### Nelder_Mead converges successfully!!! - but only for the df.tourney
 lmer3d <- update(lmer3, control=lmerControl(optimizer="Nelder_Mead"))
@@ -110,10 +105,12 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
   theme_hodp()
 p
 # Very similar fixed effects vs. Completely pooled OLS
+```
 
+## SEGMENTED REGRESSION with OLS
+Using the segmented package to explore segmenting the OLS model 
 
-
-#### SEGMENTED REGRESSION ####
+```{r}
 # Using the segmented package
 # have to provide estimates for breakpoints.
 # apriori guess of 3 based on when the rule change was announced,   
@@ -126,7 +123,7 @@ summary(seg4)
 # get breakpoints
 seg4$psi
 # get the slopes
-slope(seg4)
+head(slope(seg4))
 
 # get the fitted data
 my.fitted <- fitted(seg4)
@@ -205,10 +202,12 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
   theme_hodp()
 p 
 
-slope(seg7)
+```
 
+### Mixed model - segmented, unsuccessful aside exploring teams
+Unsuccessful Aside playing around with same coach
 
-### Unsuccessful Aside
+```{r}
 # Mixed Model Segmented - coaching change
 lmer8 <- lmer(X3PAr ~ time*same.coach + (1  + time|School) , data=df.tourney) # fails to converge
 # Use all fit to find a model that converges
@@ -261,14 +260,13 @@ p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) +
   ylab("3PAr") +
   theme_hodp()
 p
+```
 
 
+## Model 9 - Final mode
+Mixed model by era 
 
-
-
-
-### Model 9 ###
-### Mixed model by era ###
+```{r}
 df.tourney$era <- as.factor((df.tourney$year > 2006) + (df.tourney$year > 2012))
 
 # Mixed Model Segmented - coaching change
@@ -313,8 +311,6 @@ lmer9fn <- function(year, era1, era2) {
            intercept.1*era1 + slope.1 * (year - 2003) * era1 + 
            intercept.2*era2 + slope.2 * (year - 2003) * era2)
 }
-df.tourney
-
 
 p <- ggplot(df.tourney, aes(x = time + 2003, y = X3PAr)) + 
   geom_point() +
@@ -343,9 +339,12 @@ p
 
 # lmer9a vs. lmer3d anova test
 anova(lmer3d, lmer9a)
+```
+
+## Contrast t-tests 
 
 
-### Contrast t-tests ###
+```{r}
 # Test if slopes are significantly different
 # Create a vector of coefficients to test if difference between slope for 
 # era0*time and era1*time is 0 or not
@@ -397,3 +396,6 @@ titles = c("Simple OLS",
 data.frame(titles, AICs)
 
 ########## EOF ########## 
+```
+
+
