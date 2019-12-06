@@ -35,55 +35,6 @@ coef(lmer3d)$School[idx_min, 2]
 
 new_df <- data.frame(school = school_list, slope = coef(lmer3d)$School[,2], wins = total_wins, threes_m = total_3s_made, sos = total_sos)
 new_df = new_df[order(new_df$slope),]
-nrow(new_df)
-most_neg <- new_df[1:75, ]
-middle <- new_df[75:150, ]
-most_pos <- new_df[151:225, ]
-
-ggplot(most_neg, aes(x = x)) +
-  geom_histogram() +
-  geom_vline(aes(xintercept=mean(total_wins$x)),
-             color="red", size=1) +
-  geom_vline(aes(xintercept=mean(most_neg$x)),
-             color="blue",linetype="dashed", size=1) +
-  theme_hodp() +
-  labs(title="Bottom Third Teams For 3PAr Rate") +
-  xlab("Wins in 15 years") +
-  ylab("Frequency")
-
-ggplot(most_pos, aes(x = x)) +
-  geom_histogram() +
-  geom_vline(aes(xintercept=mean(total_wins$x)),
-             color="red", size=1) +
-  geom_vline(aes(xintercept=mean(most_pos$x)),
-             color="blue",linetype="dashed", size=1) +
-  theme_hodp() +
-  labs(title="Top Third Teams For 3PAr Rate") +
-  xlab("Wins in 15 years") +
-  ylab("Frequency")
-
-# histograms for total threes made
-ggplot(most_neg, aes(x = x.1)) +
-  geom_histogram() +
-  geom_vline(aes(xintercept=mean(total_3s_made$x)),
-             color="red", size=1) +
-  geom_vline(aes(xintercept=mean(most_neg$x.1)),
-             color="blue",linetype="dashed", size=1) +
-  theme_hodp() +
-  labs(title="Bottom Third Teams For 3PAr Rate") +
-  xlab("3 Pointers Made") +
-  ylab("Frequency")
-
-ggplot(most_pos, aes(x = x.1)) +
-  geom_histogram() +
-  geom_vline(aes(xintercept=mean(total_3s_made$x)),
-             color="red", size=1) +
-  geom_vline(aes(xintercept=mean(most_pos$x.1)),
-             color="blue",linetype="dashed", size=1) +
-  theme_hodp() +
-  labs(title="Top Third Teams For 3PAr Rate") +
-  xlab("3 Pointers Made") +
-  ylab("Frequency")
 
 # check for with absolute value
 abs_df <- new_df
@@ -91,45 +42,79 @@ abs_df$slope = abs(abs_df$slope)
 abs_df = abs_df[order(abs_df$slope),]
 abs_df
 
-close_zero <- abs_df[1:75, ]
+close_zero_least <- abs_df[1:50,]
 close_zero
+close_zero_most <- abs_df[181:230,]
 
-ggplot(close_zero, aes(x = x)) +
+# histograms - teams least prone
+
+ggplot(close_zero_least, aes(x = x)) +
   geom_histogram() +
   geom_vline(aes(xintercept=mean(total_wins$x)),
              color="red", size=1) +
-  geom_vline(aes(xintercept=mean(close_zero$x)),
+  geom_vline(aes(xintercept=mean(close_zero_least$x)),
              color="blue",linetype="dashed", size=1) +
+  geom_vline(aes(xintercept=mean(close_zero_most$x)),
+             color="green",linetype="dashed", size=1) +
   theme_hodp() +
-  labs(title="Teams Closest to 0 3PAr Rate Change") +
+  labs(title="Teams Least Prone to 3PAr Rate Change") +
   xlab("Wins in 15 years") +
   ylab("Frequency")
 
-ggplot(close_zero, aes(x = x.1)) +
+ggplot(close_zero_least, aes(x = x.1)) +
   geom_histogram() +
   geom_vline(aes(xintercept=mean(total_3s_made$x)),
              color="red", size=1) +
-  geom_vline(aes(xintercept=mean(close_zero$x.1)),
+  geom_vline(aes(xintercept=mean(close_zero_least$x.1)),
              color="blue",linetype="dashed", size=1) +
+  geom_vline(aes(xintercept=mean(close_zero_most$x.1)),
+             color="green",linetype="dashed", size=1) +
   theme_hodp() +
-  labs(title="Teams Closest to 0 3PAr Rate Change") +
+  labs(title="Teams Least Prone to 3PAr Rate Change") +
+  theme(legend.position = c(0.8, 0.2)) +
   xlab("3 Pointers Made") +
   ylab("Frequency")
 
-# t tests: the aggregate mean totally different than the subsetted data
-mean(total_wins$x)
-t.test(most_neg$x)
-t.test(most_pos$x)
-t.test(close_zero$x)
+# histogram teams most prone
 
-# t tests - 3 pointers made
-t.test(most_neg$x.1)
-t.test(most_pos$x.1)
-t.test(close_zero$x.1)
-mean(total_3s_made$x)
+ggplot(close_zero_most, aes(x = x)) +
+  geom_histogram() +
+  geom_vline(aes(xintercept=mean(total_wins$x)),
+             color="red", size=1) +
+  geom_vline(aes(xintercept=mean(close_zero_most$x)),
+             color="green",linetype="dashed", size=1) +
+  geom_vline(aes(xintercept=mean(close_zero_least$x)),
+             color="blue",linetype="dashed", size=1) +
+  theme_hodp() +
+  labs(title="Teams Most Prone to 3PAr Rate Change") +
+  xlab("Wins in 15 years") +
+  ylab("Frequency")
+
+ggplot(close_zero_most, aes(x = x.1)) +
+  geom_histogram() +
+  geom_vline(aes(xintercept=mean(total_3s_made$x)),
+             color="red", size=1) +
+  geom_vline(aes(xintercept=mean(close_zero_most$x.1)),
+             color="green",linetype="dashed", size=1) +
+  geom_vline(aes(xintercept=mean(close_zero_least$x.1)),
+             color="blue",linetype="dashed", size=1) +
+  theme_hodp() +
+  labs(title="Teams Most Prone to 3PAr Rate Change") +
+  theme(legend.position = c(0.8, 0.2)) +
+  xlab("3 Pointers Made") +
+  ylab("Frequency")
+
+# between the most and least affected teams - games
+t.test(close_zero_least$x, close_zero_most$x)
+
+# between the msot and least affected - 3 pointers made per game
+t.test(close_zero_least$x.1, close_zero_most$x.1)
 
 # more tests on the piece slopes
 piece.slopes = coef(lmer9a)$School
+piece.slopes$time = abs(piece.slopes$time)
+piece.slopes = piece.slopes[order(piece.slopes$time),]
+
 era.zeroslopes = piece.slopes[, 2]
 era.oneslopes = era.zeroslopes + piece.slopes[, 5]
 era.twoslopes = era.zeroslopes + piece.slopes[, 6]
@@ -148,38 +133,20 @@ piece_df2_most <- piece_df2[(nrow(piece_df2) - 50):nrow(piece_df2), ]
 
 # t tests for wins
 mean(total_wins$x)
-t.test(piece_df0_least$x)
-t.test(piece_df0_most$x)
+t.test(piece_df0_least$x, piece_df0_most$x)
+t.test(piece_df1_least$x, piece_df1_most$x)
+t.test(piece_df2_least$x, piece_df2_most$x)
 
-mean(total_wins$x)
-t.test(piece_df1_least$x)
-t.test(piece_df1_most$x)
-
-mean(total_wins$x)
-t.test(piece_df2_least$x)
-t.test(piece_df2_most$x)
-
-# t tests for 3 pointers made
-
+# t tests for 3 pointers made, p value 0.05
 mean(total_3s_made$x)
-t.test(piece_df0_least$x.1)
-t.test(piece_df0_most$x.1)
-
-mean(total_3s_made$x)
-t.test(piece_df1_least$x.1)
-t.test(piece_df1_most$x.1)
-
-mean(total_3s_made$x)
-t.test(piece_df2_least$x.1)
-t.test(piece_df2_most$x.1)
+t.test(piece_df0_least$x.1, piece_df0_most$x.1)
+t.test(piece_df1_least$x.1, piece_df1_most$x.1)
+t.test(piece_df2_least$x.1, piece_df2_most$x.1)
 
 mean(most_neg$x.2)
 mean(most_pos$x.2)
 mean(close_zero$x.2)
 mean(total_sos$x)
-
-
-
 
 #annas stuff
 
