@@ -1,6 +1,5 @@
 # Analyzing Trends in the NCAA 3 Point Shooting from 2003 to 2019
 ## Authors: Seth Billiau, Jess Eng, Anna Li
-## Date Last Modified: December 12, 2019
 
 ### Abstract
 
@@ -21,3 +20,5 @@ We provide a plot of the average team in our final model with appropriate breakp
 ![final_model](https://github.com/sethbilliau/stat139finalproject/blob/master/images/segmented_final.png)
 
 Our full writeup can be found at writeup.pdf in this repository. 
+
+Date Last Modified: December 12, 2019
